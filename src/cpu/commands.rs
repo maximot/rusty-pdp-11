@@ -157,3 +157,29 @@ pub const UNKNOWN_COMMAND: Command = Command(0xFFFF, "UNKNOWN", CPU::do_panic);
 fn command(opcode: Word, name: &'static str, interpretation: fn(&mut CPU, &mut Memory, Word)) -> (Word, Command) {
     (opcode, Command(opcode, name, interpretation))
 }
+
+impl CPU {
+    pub (in super) fn command(&self, command_word: Word) -> &Command {
+        if let Some(command) = self.commands.o_0_commands.get(&(command_word & O_0_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.o_1_commands.get(&(command_word & O_1_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.o_1_5_commands.get(&(command_word & O_1_5_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.o_2_commands.get(&(command_word & O_2_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.b_commands.get(&(command_word & B_MASK)) {
+            return command;
+        }
+
+        &UNKNOWN_COMMAND
+    }
+}
