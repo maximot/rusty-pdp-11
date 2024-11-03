@@ -132,12 +132,12 @@ impl Default for Commands {
                 command(0x00A0, "SWAB", CPU::do_nop),
                 command(0x00A0, "SXT", CPU::do_nop),
             ]), 
-            // TODO: impl
+            // DONE: 
             o_1_5_commands: HashMap::from([
                 command(0x7000, "MUL", CPU::do_mul),
                 command(0x7200, "DIV", CPU::do_div),
                 command(0x7400, "ASH", CPU::do_ash),
-                command(0x7600, "ASHC", CPU::do_nop), // TODO
+                command(0x7600, "ASHC", CPU::do_ashc),
                 command(0x7800, "XOR", CPU::do_xor),
             ]),
             // DONE: 

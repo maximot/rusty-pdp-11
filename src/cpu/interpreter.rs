@@ -40,7 +40,7 @@ impl CPU {
 
         assert_even_reg(&dst);
 
-        let dst_hi = dst | 0x01;
+        let dst_hi = dst | 0x01u8;
 
         let src = adr_operand(command);
 
@@ -80,26 +80,78 @@ impl CPU {
             return;
         }
 
-        let long_dst_value = dst_value as LongWord | if dst_value.is_negative() { 0xFFFF0000 } else { 0x0000000 };
+        let partial_shift = shift - 1u16;
 
-        let long_result = if left_shift {
-            long_dst_value << shift
+        let (intermediate_result, result) = if left_shift {
+            let partially_shifted = dst_value << partial_shift;
+            let shifted = partially_shifted << 1;
+
+            (partially_shifted, shifted)
         } else {
-            long_dst_value >> shift
-        };
+            let partially_shifted = dst_value >> partial_shift;
+            let shifted = partially_shifted >> 1;
 
-        let result = long_result.low();
+            (partially_shifted, shifted)
+        };
 
         self.set_word_reg(dst, result);
 
         let overflow = dst_value.is_negative() != result.is_negative();
-        
+
         let carry = if left_shift {
-            let last_shifted_bit = 0x00008000u32 << shift;
-            (long_result & last_shifted_bit) > 0
+            intermediate_result.is_negative()
         } else {
-            let last_shifted_bit = 0x00000001u32 << (shift - 1);
-            (long_dst_value & last_shifted_bit) > 0
+            (intermediate_result & 0x0001u16) > 0
+        };
+
+        self.update_status_flags(memory, result, carry);
+        self.update_overflow_flag(memory, overflow);
+    }
+
+    pub fn do_ashc(&mut self, memory: &mut Memory, command: Word) {
+        let dst = reg_operand(command);
+
+        assert_even_reg(&dst);
+
+        let dst_hi = dst | 0x01u8;
+        
+        let src_value = self.get_word_by_operand(memory, adr_operand(command));
+        let left_shift = (src_value & 0x0020u16) == 0x0000u16;
+        let shift = src_value & 0x001Fu16;
+
+        let dst_lo_value = self.get_word_from_reg(dst);
+        let dst_hi_value = self.get_word_from_reg(dst_hi);
+
+        let dst_value = long_word(dst_lo_value, dst_hi_value);
+
+        if shift == 0 {
+            self.update_status_flags(memory, dst_value, false);
+            return;
+        }
+
+        let partial_shift = shift - 1u16;
+
+        let (intermediate_result, result) = if left_shift {
+            let partially_shifted = dst_value << partial_shift;
+            let shifted = partially_shifted << 1;
+
+            (partially_shifted, shifted)
+        } else {
+            let partially_shifted = dst_value >> partial_shift;
+            let shifted = partially_shifted >> 1;
+
+            (partially_shifted, shifted)
+        };
+
+        self.set_word_reg(dst, result.low());
+        self.set_word_reg(dst_hi, result.high());
+
+        let overflow = dst_value.is_negative() != result.is_negative();
+
+        let carry = if left_shift {
+            intermediate_result.is_negative()
+        } else {
+            (intermediate_result & 0x00000001u32) > 0
         };
 
         self.update_status_flags(memory, result, carry);
