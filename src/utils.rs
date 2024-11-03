@@ -10,7 +10,12 @@ pub const WORD_SIZE_BITS: Word = BYTE_SIZE_BITS * WORD_SIZE_BYTES;
 
 #[inline(always)]
 pub fn word(low: Byte, high: Byte) -> Word {
-    (high as Word) << 8 | (low as Word)
+    (high as Word) << Byte::size_bits() | (low as Word)
+}
+
+#[inline(always)]
+pub fn long_word(low: Word, high: Word) -> LongWord {
+    (high as LongWord) << Word::size_bits() | (low as LongWord)
 }
 
 #[inline(always)]
@@ -23,14 +28,14 @@ pub fn word_has_carry(word: Word) -> bool {
     (word & 0xFF00) > 0
 }
 
-pub trait Number: Sized {
+pub trait Number<T>: Sized {
     fn set_n_bit(&self, n: Byte, value: bool) -> Self;
     fn get_n_bit(&self, n: Byte) -> bool;
 
     fn register(&self) -> Word;
     fn word(&self) -> Word;
-    fn high(&self) -> Byte;
-    fn low(&self) -> Byte;
+    fn high(&self) -> T;
+    fn low(&self) -> T;
 
     fn is_zero(&self) -> bool;
     fn is_negative(&self) -> bool;
@@ -41,7 +46,7 @@ pub trait Number: Sized {
     fn size_bits() -> Byte { Self::size_bytes() << 3 }
 }
 
-impl Number for Byte {
+impl Number<Byte> for Byte {
     #[inline(always)]
     fn set_n_bit(&self, n: Byte, value: bool) -> Self {
         assert!(n < Self::size_bits());
@@ -103,7 +108,7 @@ impl Number for Byte {
     fn size_bytes() -> Byte { std::mem::size_of::<Byte>() as Byte }
 }
 
-impl Number for Word {
+impl Number<Byte> for Word {
     #[inline(always)]
     fn set_n_bit(&self, n: Byte, value: bool) -> Self {
         assert!(n < Self::size_bits());
@@ -164,3 +169,66 @@ impl Number for Word {
     #[inline(always)]
     fn size_bytes() -> Byte { std::mem::size_of::<Word>() as Byte }
 }
+
+impl Number<Word> for LongWord {
+    #[inline(always)]
+    fn set_n_bit(&self, n: Byte, value: bool) -> Self {
+        assert!(n < Self::size_bits());
+
+        match value {
+            true => *self | (0x00000001u32 << n),
+            false => *self & (0xFFFFFFFFu32 ^ (0x00000001u32 << n)),
+        }
+    }
+
+    #[inline(always)]
+    fn get_n_bit(&self, n: Byte) -> bool {
+        assert!(n < Self::size_bits());
+
+        (*self >> n & 0x00000001u32) > 0
+    }
+
+    #[inline(always)]
+    fn word(&self) -> Word {
+        self.register()
+    }
+
+    #[inline(always)]
+    fn register(&self) -> Word {
+        self.low()
+    }
+
+    #[inline(always)]
+    fn high(&self) -> Word {
+        (*self >> Word::size_bits()) as Word 
+    }
+
+    #[inline(always)]
+    fn low(&self) -> Word {
+        *self as Word
+    }
+
+    #[inline(always)]
+    fn is_zero(&self) -> bool {
+        *self == 0x00000000u32
+    }
+
+    #[inline(always)]
+    fn is_negative(&self) -> bool {
+        (*self & 0x80000000u32) > 0x00000000u32
+    }
+
+    #[inline(always)]
+    fn one_complement(&self) -> Self {
+        !(*self)
+    }
+
+    #[inline(always)]
+    fn two_complement(&self) -> Self {
+        self.one_complement() + 0x00000001u32
+    }
+
+    #[inline(always)]
+    fn size_bytes() -> Byte { std::mem::size_of::<Word>() as Byte }
+}
+ 

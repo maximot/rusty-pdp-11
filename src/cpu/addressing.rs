@@ -41,7 +41,7 @@ impl CPU {
 
 // Put
 impl CPU {
-    pub (in super) fn put_operand_value_with_addressing<N: Number>(
+    pub (in super) fn put_operand_value_with_addressing<T, N: Number<T>>(
         &mut self, 
         memory: &mut Memory, 
         reg_index: Byte, 
@@ -66,7 +66,7 @@ impl CPU {
         }
     }
 
-    fn put_operand_value<N: Number>(
+    fn put_operand_value<T, N: Number<T>>(
         &mut self, 
         memory: &mut Memory, 
         write_memory: impl Fn(&mut Memory, Address, N) -> usize, 
@@ -77,14 +77,14 @@ impl CPU {
         write_memory(memory, get_address(self, memory, reg_index, N::size_bytes()), value);
     }
 
-    fn put_addressing_register<N: Number>(&mut self, reg_index: Byte, data: N, set_register: impl Fn(&mut CPU, Byte, N)) {
+    fn put_addressing_register<T, N: Number<T>>(&mut self, reg_index: Byte, data: N, set_register: impl Fn(&mut CPU, Byte, N)) {
         set_register(self, reg_index, data);
     }
 }
 
 // Get
 impl CPU {
-    pub (in super) fn get_operand_value_with_addressing<N: Number>(
+    pub (in super) fn get_operand_value_with_addressing<T, N: Number<T>>(
         &mut self, 
         memory: &Memory, 
         reg_index: Byte, 
@@ -108,7 +108,7 @@ impl CPU {
         }
     }
 
-    fn get_operand_value<N: Number>(
+    fn get_operand_value<T, N: Number<T>>(
         &mut self, 
         memory: &Memory, 
         read_memory: impl Fn(&Memory, Address) -> N, 
@@ -118,7 +118,7 @@ impl CPU {
         read_memory(memory, get_address(self, memory, reg_index, N::size_bytes()))
     }
 
-    fn get_addressing_register<N: Number>(&mut self, reg_index: Byte, get_register: impl Fn(&mut CPU, Byte) -> N) -> N {
+    fn get_addressing_register<T, N: Number<T>>(&mut self, reg_index: Byte, get_register: impl Fn(&mut CPU, Byte) -> N) -> N {
         get_register(self, reg_index)
     }
 }

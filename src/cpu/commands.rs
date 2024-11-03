@@ -49,16 +49,37 @@ pub const B_MASK: Word = 0xFF00;
  */
 pub const O_MASK: Word = 0x003F;
 
+/**
+ * Register mask
+ * 0000000000000111
+ * FEDCBA9876543210
+ */
+pub const REG_MASK: Word = 0x0007;
+
+// For Two-operand instructions
+
 pub fn dst_operand(command: Word) -> Byte {
-    return (command & O_MASK).low();
+    (command & O_MASK).low()
 }
 
 pub fn src_operand(command: Word) -> Byte {
-    return ((command >> 6) & O_MASK).low();
+    ((command >> 6) & O_MASK).low()
 }
 
+// For branch instructions
+
 pub fn branch_offset(command: Word) -> Byte {
-    return command.low();
+    command.low()
+}
+
+// For One-and-a-half-operand instructions
+
+pub fn reg_operand(command: Word) -> Byte {
+    ((command >> 6) & REG_MASK).low()
+}
+
+pub fn adr_operand(command: Word) -> Byte {
+    dst_operand(command)
 }
 
 pub struct Command(pub Word, pub &'static str, pub fn(&mut CPU, &mut Memory, Word));
@@ -113,11 +134,11 @@ impl Default for Commands {
             ]), 
             // TODO: impl
             o_1_5_commands: HashMap::from([
-                command(0x7000, "MUL", CPU::do_nop),
-                command(0x7200, "DIV", CPU::do_nop),
-                command(0x7400, "ASH", CPU::do_nop),
-                command(0x7600, "ASHC", CPU::do_nop),
-                command(0x7800, "XOR", CPU::do_nop),
+                command(0x7000, "MUL", CPU::do_mul),
+                command(0x7200, "DIV", CPU::do_div),
+                command(0x7400, "ASH", CPU::do_ash),
+                command(0x7600, "ASHC", CPU::do_nop), // TODO
+                command(0x7800, "XOR", CPU::do_xor),
             ]),
             // DONE: 
             o_2_commands: HashMap::from([

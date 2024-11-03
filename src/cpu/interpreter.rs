@@ -1,6 +1,6 @@
-use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
+use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ branch_offset, commands::{ dst_operand, src_operand }, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
+use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, long_word, reg_operand, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -12,6 +12,110 @@ impl CPU {
 
     pub fn do_panic(&mut self, _memory: &mut Memory, _command: Word) {
         panic!("CPU panic!")
+    }
+}
+
+// One-and-a-half-operand
+impl CPU {
+    pub fn do_mul(&mut self, memory: &mut Memory, command: Word) {
+        let dst = reg_operand(command);
+        let dst_hi = dst | 0x01;
+
+        let src = adr_operand(command);
+
+        let dst_value = self.get_word_from_reg(dst);
+        let src_value = self.get_word_by_operand(memory, src);
+
+        let result = (dst_value as LongWord) * (src_value as LongWord);
+
+        self.set_word_reg(dst_hi, result.high());
+        self.set_word_reg(dst, result.low());
+
+        self.update_status_flags(memory, result, has_carry(result));
+        self.update_overflow_flag(memory, false);
+    }
+
+    pub fn do_div(&mut self, memory: &mut Memory, command: Word) {
+        let dst = reg_operand(command);
+
+        assert_even_reg(&dst);
+
+        let dst_hi = dst | 0x01;
+
+        let src = adr_operand(command);
+
+        let dst_lo_value = self.get_word_from_reg(dst);
+        let dst_hi_value = self.get_word_from_reg(dst_hi);
+
+        let dst_value = long_word(dst_lo_value, dst_hi_value);
+        let src_value = self.get_word_by_operand(memory, src) as LongWord;
+
+        if src_value.is_zero() {
+            self.update_carry_flag(memory, true);
+            self.update_overflow_flag(memory, true);
+            return;
+        }
+
+        let quotient = dst_value / src_value;
+        let reminder = dst_value % src_value;
+
+        self.set_word_reg(dst_hi, reminder.low());
+        self.set_word_reg(dst, quotient.low());
+
+        self.update_status_flags(memory, quotient.low(), has_carry(quotient));
+        self.update_carry_flag(memory, false);
+    }
+
+    pub fn do_ash(&mut self, memory: &mut Memory, command: Word) {
+        let dst = reg_operand(command);
+        
+        let src_value = self.get_word_by_operand(memory, adr_operand(command));
+        let left_shift = (src_value & 0x0020u16) == 0x0000u16;
+        let shift = src_value & 0x001Fu16;
+
+        let dst_value = self.get_word_from_reg(dst);
+
+        if shift == 0 {
+            self.update_status_flags(memory, dst_value, false);
+            return;
+        }
+
+        let long_dst_value = dst_value as LongWord | if dst_value.is_negative() { 0xFFFF0000 } else { 0x0000000 };
+
+        let long_result = if left_shift {
+            long_dst_value << shift
+        } else {
+            long_dst_value >> shift
+        };
+
+        let result = long_result.low();
+
+        self.set_word_reg(dst, result);
+
+        let overflow = dst_value.is_negative() != result.is_negative();
+        
+        let carry = if left_shift {
+            let last_shifted_bit = 0x00008000u32 << shift;
+            (long_result & last_shifted_bit) > 0
+        } else {
+            let last_shifted_bit = 0x00000001u32 << (shift - 1);
+            (long_dst_value & last_shifted_bit) > 0
+        };
+
+        self.update_status_flags(memory, result, carry);
+        self.update_overflow_flag(memory, overflow);
+    }
+
+    pub fn do_xor(&mut self, memory: &mut Memory, command: Word) {
+        let dst = adr_operand(command);
+
+        let dst_value = self.get_word_by_operand(memory, dst);
+        let src_value = self.get_word_from_reg(reg_operand(command));
+
+        let result = dst_value ^ src_value;
+
+        self.put_word_by_operand(memory, dst, result);
+        self.update_status_flags_bitwise(memory, result);
     }
 }
 

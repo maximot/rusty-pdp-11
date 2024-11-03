@@ -163,13 +163,13 @@ impl CPU {
 
 // Flags
 impl CPU {
-    fn update_status_flags_bitwise<N: Number>(&mut self, memory: &mut Memory, result: N) {
+    fn update_status_flags_bitwise<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N) {
         self.update_overflow_flag(memory, false);
         self.update_zero_flag(memory, result.is_zero());
         self.update_negative_flag(memory, result.is_negative());
     }
 
-    fn update_status_flags<N: Number>(&mut self, memory: &mut Memory, result: N, carry_bit: bool) {
+    fn update_status_flags<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N, carry_bit: bool) {
         self.update_carry_flag(memory, carry_bit);
         self.update_overflow_flag(memory, carry_bit);
         self.update_zero_flag(memory, result.is_zero());
@@ -224,4 +224,8 @@ fn assert_not_pc(reg_index: &Byte) {
 
 fn assert_pc(reg_index: &Byte) {
     assert!(*reg_index == PROGRAM_COUNTER_INDEX);
+}
+
+fn assert_even_reg(reg_index: &Byte) {
+    assert!((*reg_index & 0x01) == 0x00);
 }
