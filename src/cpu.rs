@@ -10,7 +10,9 @@ pub mod interpreter;
 pub mod debug;
 pub mod commands;
 
-pub const FIRST_COMMAND: Address = 0x200;
+pub const FIRST_COMMAND: Address = 0x0200;
+
+pub const FLAGS_IN_MEMORY: Address = 0xFFFE;
 
 pub const REG_COUNT: usize = 8;
 
@@ -161,33 +163,37 @@ impl CPU {
 
 // Flags
 impl CPU {
-    fn update_status_flags_bitwise<N: Number>(&mut self, result: N) {
-        self.update_overflow_flag(false);
-        self.update_zero_flag(result.is_zero());
-        self.update_negative_flag(result.is_negative());
+    fn update_status_flags_bitwise<N: Number>(&mut self, memory: &mut Memory, result: N) {
+        self.update_overflow_flag(memory, false);
+        self.update_zero_flag(memory, result.is_zero());
+        self.update_negative_flag(memory, result.is_negative());
     }
 
-    fn update_status_flags<N: Number>(&mut self, result: N, carry_bit: bool) {
-        self.update_carry_flag(carry_bit);
-        self.update_overflow_flag(carry_bit);
-        self.update_zero_flag(result.is_zero());
-        self.update_negative_flag(result.is_negative());
+    fn update_status_flags<N: Number>(&mut self, memory: &mut Memory, result: N, carry_bit: bool) {
+        self.update_carry_flag(memory, carry_bit);
+        self.update_overflow_flag(memory, carry_bit);
+        self.update_zero_flag(memory, result.is_zero());
+        self.update_negative_flag(memory, result.is_negative());
     }
 
-    fn update_carry_flag(&mut self, carry_bit: bool) {
-        self.status = self.status.set_n_bit(CARRY_FLAG_INDEX, carry_bit)
+    fn update_carry_flag(&mut self, memory: &mut Memory, carry_bit: bool) {
+        self.status = self.status.set_n_bit(CARRY_FLAG_INDEX, carry_bit);
+        self.update_flags_in_memory(memory);
     }
 
-    fn update_overflow_flag(&mut self, overflow_bit: bool) {
-        self.status = self.status.set_n_bit(OVERFLOW_FLAG_INDEX, overflow_bit)
+    fn update_overflow_flag(&mut self, memory: &mut Memory, overflow_bit: bool) {
+        self.status = self.status.set_n_bit(OVERFLOW_FLAG_INDEX, overflow_bit);
+        self.update_flags_in_memory(memory);
     }
 
-    fn update_zero_flag(&mut self, zero_bit: bool) {
-        self.status = self.status.set_n_bit(ZERO_FLAG_INDEX, zero_bit)
+    fn update_zero_flag(&mut self, memory: &mut Memory, zero_bit: bool) {
+        self.status = self.status.set_n_bit(ZERO_FLAG_INDEX, zero_bit);
+        self.update_flags_in_memory(memory);
     }
 
-    fn update_negative_flag(&mut self, negative_bit: bool) {
-        self.status = self.status.set_n_bit(NEGATIVE_FLAG_INDEX, negative_bit)
+    fn update_negative_flag(&mut self, memory: &mut Memory, negative_bit: bool) {
+        self.status = self.status.set_n_bit(NEGATIVE_FLAG_INDEX, negative_bit);
+        self.update_flags_in_memory(memory);
     }
 
     fn carry_flag(&self) -> bool {
@@ -204,6 +210,10 @@ impl CPU {
 
     fn negative_flag(&self) -> bool {
         self.status.get_n_bit(NEGATIVE_FLAG_INDEX)
+    }
+
+    fn update_flags_in_memory(&self, memory: &mut Memory) {
+        memory.write_word(FLAGS_IN_MEMORY, self.status);
     }
 }
 

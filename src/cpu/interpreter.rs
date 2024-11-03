@@ -22,7 +22,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst_operand(command), word_to_move);
 
-        self.update_status_flags_bitwise(word_to_move);
+        self.update_status_flags_bitwise(memory, word_to_move);
     }
 
     pub fn do_movb(&mut self, memory: &mut Memory, command: Word) {
@@ -30,7 +30,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst_operand(command), byte_to_move);
 
-        self.update_status_flags_bitwise(byte_to_move);
+        self.update_status_flags_bitwise(memory, byte_to_move);
     }
 
     pub fn do_add(&mut self, memory: &mut Memory, command: Word) {
@@ -45,7 +45,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(result, has_carry(sum));
+        self.update_status_flags(memory, result, has_carry(sum));
     }
 
     pub fn do_sub(&mut self, memory: &mut Memory, command: Word) {
@@ -60,7 +60,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(result, !has_carry(sub));
+        self.update_status_flags(memory, result, !has_carry(sub));
     }
 
     pub fn do_cmp(&mut self, memory: &mut Memory, command: Word) {
@@ -71,7 +71,7 @@ impl CPU {
 
         let result = sub as Word;
 
-        self.update_status_flags(result, !has_carry(sub));
+        self.update_status_flags(memory, result, !has_carry(sub));
     }
 
     pub fn do_cmpb(&mut self, memory: &mut Memory, command: Word) {
@@ -82,7 +82,7 @@ impl CPU {
 
         let result = sub as Byte;
 
-        self.update_status_flags(result, !word_has_carry(sub));
+        self.update_status_flags(memory, result, !word_has_carry(sub));
     }
 
     pub fn do_bis(&mut self, memory: &mut Memory, command: Word) {
@@ -95,7 +95,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 
     pub fn do_bisb(&mut self, memory: &mut Memory, command: Word) {
@@ -108,7 +108,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 
     pub fn do_bic(&mut self, memory: &mut Memory, command: Word) {
@@ -121,7 +121,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 
     pub fn do_bicb(&mut self, memory: &mut Memory, command: Word) {
@@ -134,7 +134,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 
     pub fn do_bit(&mut self, memory: &mut Memory, command: Word) {
@@ -143,7 +143,7 @@ impl CPU {
 
         let result = src_value & dst_value;
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 
     pub fn do_bitb(&mut self, memory: &mut Memory, command: Word) {
@@ -152,7 +152,7 @@ impl CPU {
 
         let result = src_value & dst_value;
 
-        self.update_status_flags_bitwise(result);
+        self.update_status_flags_bitwise(memory, result);
     }
 }
 
