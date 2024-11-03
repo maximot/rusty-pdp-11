@@ -189,6 +189,22 @@ impl CPU {
     fn update_negative_flag(&mut self, negative_bit: bool) {
         self.status = self.status.set_n_bit(NEGATIVE_FLAG_INDEX, negative_bit)
     }
+
+    fn carry_flag(&self) -> bool {
+        self.status.get_n_bit(CARRY_FLAG_INDEX)
+    }
+
+    fn overflow_flag(&self) -> bool {
+        self.status.get_n_bit(OVERFLOW_FLAG_INDEX)
+    }
+
+    fn zero_flag(&self) -> bool {
+        self.status.get_n_bit(ZERO_FLAG_INDEX)
+    }
+
+    fn negative_flag(&self) -> bool {
+        self.status.get_n_bit(NEGATIVE_FLAG_INDEX)
+    }
 }
 
 // Asserts

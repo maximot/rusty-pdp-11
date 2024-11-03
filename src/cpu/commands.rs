@@ -57,6 +57,10 @@ pub fn src_operand(command: Word) -> Byte {
     return ((command >> 6) & O_MASK).low();
 }
 
+pub fn branch_offset(command: Word) -> Byte {
+    return command.low();
+}
+
 pub struct Command(pub Word, pub &'static str, pub fn(&mut CPU, &mut Memory, Word));
 
 pub struct Commands {
@@ -130,23 +134,23 @@ impl Default for Commands {
                 command(0x6000, "ADD", CPU::do_add),
                 command(0xE000, "SUB", CPU::do_sub),
             ]), 
-            // TODO: impl
+            // DONE:
             b_commands: HashMap::from([
-                command(0x0100, "BR", CPU::do_nop),
-                command(0x0200, "BNE", CPU::do_nop),
-                command(0x0300, "BEQ", CPU::do_nop),
-                command(0x0400, "BGE", CPU::do_nop),
-                command(0x0500, "BLT", CPU::do_nop),
-                command(0x0600, "BGT", CPU::do_nop),
-                command(0x0700, "BLE", CPU::do_nop),
-                command(0x8000, "BPL", CPU::do_nop),
-                command(0x8100, "BMI", CPU::do_nop),
-                command(0x8200, "BHI", CPU::do_nop),
-                command(0x8300, "BLOS", CPU::do_nop),
-                command(0x8400, "BVC", CPU::do_nop),
-                command(0x8500, "BVS", CPU::do_nop),
-                command(0x8600, "BHIS/BCC", CPU::do_nop),
-                command(0x8700, "BCS/BLO", CPU::do_nop),
+                command(0x0100, "BR", CPU::do_br),
+                command(0x0200, "BNE", CPU::do_bne),
+                command(0x0300, "BEQ", CPU::do_beq),
+                command(0x0400, "BGE", CPU::do_bge),
+                command(0x0500, "BLT", CPU::do_blt),
+                command(0x0600, "BGT", CPU::do_bgt),
+                command(0x0700, "BLE", CPU::do_ble),
+                command(0x8000, "BPL", CPU::do_bpl),
+                command(0x8100, "BMI", CPU::do_bmi),
+                command(0x8200, "BHI", CPU::do_bhi),
+                command(0x8300, "BLOS", CPU::do_blos),
+                command(0x8400, "BVC", CPU::do_bvc),
+                command(0x8500, "BVS", CPU::do_bvs),
+                command(0x8600, "BHIS/BCC", CPU::do_bcc),
+                command(0x8700, "BCS/BLO", CPU::do_bcs),
             ]),
         }
     }

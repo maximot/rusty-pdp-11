@@ -1,6 +1,6 @@
 use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ commands::{ dst_operand, src_operand }, word_has_carry, Byte, CPU };
+use super::{ branch_offset, commands::{ dst_operand, src_operand }, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -153,5 +153,114 @@ impl CPU {
         let result = src_value & dst_value;
 
         self.update_status_flags_bitwise(result);
+    }
+}
+
+// Branch commands
+impl CPU {
+    pub fn do_br(&mut self, _memory: &mut Memory, command: Word) {
+        let offset = branch_offset(command) as Word;
+
+        let pc = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
+
+        let result = pc + (offset << 1);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, result);
+    }
+
+    pub fn do_bne(&mut self, memory: &mut Memory, command: Word) {
+        if !self.zero_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_beq(&mut self, memory: &mut Memory, command: Word) {
+        if self.zero_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bpl(&mut self, memory: &mut Memory, command: Word) {
+        if !self.negative_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bmi(&mut self, memory: &mut Memory, command: Word) {
+        if self.negative_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bvc(&mut self, memory: &mut Memory, command: Word) {
+        if !self.overflow_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bvs(&mut self, memory: &mut Memory, command: Word) {
+        if self.overflow_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bcc(&mut self, memory: &mut Memory, command: Word) {
+        if !self.carry_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bcs(&mut self, memory: &mut Memory, command: Word) {
+        if !self.carry_flag() {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bge(&mut self, memory: &mut Memory, command: Word) {
+        let condition = !(self.negative_flag() ^ self.overflow_flag());
+
+        if condition {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_blt(&mut self, memory: &mut Memory, command: Word) {
+        let condition = self.negative_flag() ^ self.overflow_flag();
+
+        if condition {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bgt(&mut self, memory: &mut Memory, command: Word) {
+        let condition = !(self.zero_flag() || (self.negative_flag() ^ self.overflow_flag()));
+
+        if condition {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_ble(&mut self, memory: &mut Memory, command: Word) {
+        let condition = self.zero_flag() || (self.negative_flag() ^ self.overflow_flag());
+
+        if condition {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_bhi(&mut self, memory: &mut Memory, command: Word) {
+        let condition = !(self.zero_flag() || self.carry_flag());
+
+        if condition {
+            self.do_br(memory, command);
+        }
+    }
+
+    pub fn do_blos(&mut self, memory: &mut Memory, command: Word) {
+        let condition = self.zero_flag() || self.carry_flag();
+
+        if condition {
+            self.do_br(memory, command);
+        }
     }
 }
