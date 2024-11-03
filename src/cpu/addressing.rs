@@ -1,6 +1,6 @@
 use crate::mem::Memory;
 
-use super::{ Address, Byte, Number, CPU, PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES};
+use super::{ Address, Byte, Number, CPU, PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES };
 
 // Addressing
 impl CPU {
@@ -51,22 +51,22 @@ impl CPU {
         set_register: impl Fn(&mut CPU, Byte, N),
     ) {
         match addressing {
-            AddressingMode::Register => self.set_addressing_register(reg_index, data, set_register),
-            AddressingMode::RegisterDeferred => self.set_operand_value(memory, write_memory, CPU::get_register_deferred_address, reg_index, data),
-            AddressingMode::Autoicrement => self.set_operand_value(memory, write_memory, CPU::get_autoincrement_address, reg_index, data),
-            AddressingMode::AutoicrementDeferred => self.set_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
-            AddressingMode::Autodecrement => self.set_operand_value(memory, write_memory, CPU::get_autodecrement_address, reg_index, data),
-            AddressingMode::AutodecrementDeferred => self.set_operand_value(memory, write_memory, CPU::get_autodecrement_deferred_address, reg_index, data),
-            AddressingMode::Index => self.set_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
-            AddressingMode::IndexDeferred => self.set_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
-            AddressingMode::Immediate => self.set_operand_value(memory, write_memory, CPU::get_immediate_address, reg_index, data),
-            AddressingMode::Absolute => self.set_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
-            AddressingMode::Relative => self.set_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
-            AddressingMode::RelativeDeferred => self.set_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
+            AddressingMode::Register => self.put_addressing_register(reg_index, data, set_register),
+            AddressingMode::RegisterDeferred => self.put_operand_value(memory, write_memory, CPU::get_register_deferred_address, reg_index, data),
+            AddressingMode::Autoicrement => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_address, reg_index, data),
+            AddressingMode::AutoicrementDeferred => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
+            AddressingMode::Autodecrement => self.put_operand_value(memory, write_memory, CPU::get_autodecrement_address, reg_index, data),
+            AddressingMode::AutodecrementDeferred => self.put_operand_value(memory, write_memory, CPU::get_autodecrement_deferred_address, reg_index, data),
+            AddressingMode::Index => self.put_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
+            AddressingMode::IndexDeferred => self.put_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
+            AddressingMode::Immediate => self.put_operand_value(memory, write_memory, CPU::get_immediate_address, reg_index, data),
+            AddressingMode::Absolute => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
+            AddressingMode::Relative => self.put_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
+            AddressingMode::RelativeDeferred => self.put_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
         }
     }
 
-    fn set_operand_value<N: Number>(
+    fn put_operand_value<N: Number>(
         &mut self, 
         memory: &mut Memory, 
         write_memory: impl Fn(&mut Memory, Address, N) -> usize, 
@@ -77,7 +77,7 @@ impl CPU {
         write_memory(memory, get_address(self, memory, reg_index, N::size_bytes()), value);
     }
 
-    fn set_addressing_register<N: Number>(&mut self, reg_index: Byte, data: N, set_register: impl Fn(&mut CPU, Byte, N)) {
+    fn put_addressing_register<N: Number>(&mut self, reg_index: Byte, data: N, set_register: impl Fn(&mut CPU, Byte, N)) {
         set_register(self, reg_index, data);
     }
 }

@@ -1,6 +1,6 @@
-use crate::{mem::Memory, utils::{has_carry, LongWord, Number, Word}};
+use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{commands::{dst_operand, src_operand}, word_has_carry, Byte, CPU};
+use super::{ commands::{ dst_operand, src_operand }, word_has_carry, Byte, CPU };
 
 // Zero-oparand
 impl CPU {

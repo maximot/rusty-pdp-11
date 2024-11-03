@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{mem::Memory, utils::{Byte, Number, Word}};
+use crate::{ mem::Memory, utils::{Byte, Number, Word} };
 
 use super::CPU;
 

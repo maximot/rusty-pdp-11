@@ -62,14 +62,10 @@ impl CPU {
             trace!("address 0x{address:04X}");
             trace!("instruction 0x{command_word:04X}");
 
-            let command = self.command(command_word);
-            let command_opcode = command.0;
-            let command_name = command.1;
+            let Command(command_opcode, command_name, command_interpreter) = 
+                self.command(command_word);
 
-            trace!("command 0x{command_opcode:04X} ({command_name})");
-
-            let command_interpreter = command.2;
-
+            trace!("command 0x{command_opcode:04X} ({command_name})");  
             command_interpreter(self, memory, command_word);
 
             //self.trace_registers();

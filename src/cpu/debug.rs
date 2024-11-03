@@ -1,4 +1,4 @@
-use super::{Word, CPU, REG_COUNT};
+use super::{ Word, CPU, REG_COUNT };
 
 pub struct CPUStateDump {
     pub status: Word,
