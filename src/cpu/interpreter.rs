@@ -71,7 +71,7 @@ impl CPU {
         
         let src_value = self.get_word_by_operand(memory, adr_operand(command));
         let left_shift = (src_value & 0x0020u16) == 0x0000u16;
-        let shift = src_value & 0x001Fu16;
+        let shift = if left_shift { src_value } else { src_value.two_complement() } & 0x001Fu16;
 
         let dst_value = self.get_word_from_reg(dst);
 
@@ -117,7 +117,7 @@ impl CPU {
         
         let src_value = self.get_word_by_operand(memory, adr_operand(command));
         let left_shift = (src_value & 0x0020u16) == 0x0000u16;
-        let shift = src_value & 0x001Fu16;
+        let shift = if left_shift { src_value } else { src_value.two_complement() } & 0x001Fu16;
 
         let dst_lo_value = self.get_word_from_reg(dst);
         let dst_hi_value = self.get_word_from_reg(dst_hi);
