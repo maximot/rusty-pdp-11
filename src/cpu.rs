@@ -24,7 +24,6 @@ pub const OVERFLOW_FLAG_INDEX: Byte = 1; // Or V
 pub const ZERO_FLAG_INDEX: Byte = 2; // Or Z
 pub const NEGATIVE_FLAG_INDEX: Byte = 3; // Or N
 
-// TODO: FIX V FLAG
 // TODO: PROCESS COMMAND
 // TODO: INTERUPTIONS?
 pub struct CPU {
@@ -170,9 +169,9 @@ impl CPU {
         self.update_negative_flag(memory, result.is_negative());
     }
 
-    fn update_status_flags<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N, carry_bit: bool) {
+    fn update_status_flags<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N, carry_bit: bool, overflow_bit: bool) {
         self.update_carry_flag(memory, carry_bit);
-        self.update_overflow_flag(memory, carry_bit);
+        self.update_overflow_flag(memory, overflow_bit);
         self.update_zero_flag(memory, result.is_zero());
         self.update_negative_flag(memory, result.is_negative());
     }

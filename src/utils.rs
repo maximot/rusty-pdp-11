@@ -20,7 +20,12 @@ pub fn long_word(low: Word, high: Word) -> LongWord {
 
 #[inline(always)]
 pub fn has_carry(word: LongWord) -> bool {
-    (word & 0xFFFF0000) > 0
+    (word & 0x00010000) > 0
+}
+
+#[inline(always)]
+pub fn has_signed_overflow<O, T, N: Number<O>, M: Number<T>>(old: N, new: M) -> bool {
+    old.is_negative() != new.is_negative()
 }
 
 #[inline(always)]

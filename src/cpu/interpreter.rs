@@ -1,6 +1,6 @@
 use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, long_word, reg_operand, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
+use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, reg_operand, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -31,8 +31,7 @@ impl CPU {
         self.set_word_reg(dst_hi, result.high());
         self.set_word_reg(dst, result.low());
 
-        self.update_status_flags(memory, result, has_carry(result));
-        self.update_overflow_flag(memory, false);
+        self.update_status_flags(memory, result, has_carry(result), false);
     }
 
     pub fn do_div(&mut self, memory: &mut Memory, command: Word) {
@@ -62,8 +61,7 @@ impl CPU {
         self.set_word_reg(dst_hi, reminder.low());
         self.set_word_reg(dst, quotient.low());
 
-        self.update_status_flags(memory, quotient.low(), has_carry(quotient));
-        self.update_carry_flag(memory, false);
+        self.update_status_flags(memory, quotient.low(), has_carry(quotient), false);
     }
 
     pub fn do_ash(&mut self, memory: &mut Memory, command: Word) {
@@ -76,7 +74,7 @@ impl CPU {
         let dst_value = self.get_word_from_reg(dst);
 
         if shift == 0 {
-            self.update_status_flags(memory, dst_value, false);
+            self.update_status_flags(memory, dst_value, false, false);
             return;
         }
 
@@ -96,16 +94,13 @@ impl CPU {
 
         self.set_word_reg(dst, result);
 
-        let overflow = dst_value.is_negative() != result.is_negative();
-
         let carry = if left_shift {
             intermediate_result.is_negative()
         } else {
             (intermediate_result & 0x0001u16) > 0
         };
 
-        self.update_status_flags(memory, result, carry);
-        self.update_overflow_flag(memory, overflow);
+        self.update_status_flags(memory, result, carry, has_signed_overflow(dst_value, result));
     }
 
     pub fn do_ashc(&mut self, memory: &mut Memory, command: Word) {
@@ -114,7 +109,7 @@ impl CPU {
         assert_even_reg(&dst);
 
         let dst_hi = dst | 0x01u8;
-        
+
         let src_value = self.get_word_by_operand(memory, adr_operand(command));
         let left_shift = (src_value & 0x0020u16) == 0x0000u16;
         let shift = if left_shift { src_value } else { src_value.two_complement() } & 0x001Fu16;
@@ -125,7 +120,7 @@ impl CPU {
         let dst_value = long_word(dst_lo_value, dst_hi_value);
 
         if shift == 0 {
-            self.update_status_flags(memory, dst_value, false);
+            self.update_status_flags(memory, dst_value, false, false);
             return;
         }
 
@@ -146,16 +141,13 @@ impl CPU {
         self.set_word_reg(dst, result.low());
         self.set_word_reg(dst_hi, result.high());
 
-        let overflow = dst_value.is_negative() != result.is_negative();
-
         let carry = if left_shift {
             intermediate_result.is_negative()
         } else {
             (intermediate_result & 0x00000001u32) > 0
         };
 
-        self.update_status_flags(memory, result, carry);
-        self.update_overflow_flag(memory, overflow);
+        self.update_status_flags(memory, result, carry, has_signed_overflow(dst_value, result));
     }
 
     pub fn do_xor(&mut self, memory: &mut Memory, command: Word) {
@@ -201,7 +193,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(memory, result, has_carry(sum));
+        self.update_status_flags(memory, result, has_carry(sum), has_signed_overflow(dst_value, result));
     }
 
     pub fn do_sub(&mut self, memory: &mut Memory, command: Word) {
@@ -216,7 +208,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(memory, result, !has_carry(sub));
+        self.update_status_flags(memory, result, !has_carry(sub), has_signed_overflow(dst_value, result));
     }
 
     pub fn do_cmp(&mut self, memory: &mut Memory, command: Word) {
@@ -227,7 +219,7 @@ impl CPU {
 
         let result = sub as Word;
 
-        self.update_status_flags(memory, result, !has_carry(sub));
+        self.update_status_flags(memory, result, !has_carry(sub), has_signed_overflow(src_value, result));
     }
 
     pub fn do_cmpb(&mut self, memory: &mut Memory, command: Word) {
@@ -238,7 +230,7 @@ impl CPU {
 
         let result = sub as Byte;
 
-        self.update_status_flags(memory, result, !word_has_carry(sub));
+        self.update_status_flags(memory, result, !word_has_carry(sub), has_signed_overflow(src_value, result));
     }
 
     pub fn do_bis(&mut self, memory: &mut Memory, command: Word) {
