@@ -68,8 +68,8 @@ pub fn src_operand(command: Word) -> Byte {
 
 // For branch instructions
 
-pub fn branch_offset(command: Word) -> Byte {
-    command.low()
+pub fn branch_offset(command: Word) -> Word {
+    command.low().register() << 1
 }
 
 // For One-and-a-half-operand instructions

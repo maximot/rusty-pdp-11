@@ -315,11 +315,11 @@ impl CPU {
 // Branch commands
 impl CPU {
     pub fn do_br(&mut self, _memory: &mut Memory, command: Word) {
-        let offset = branch_offset(command) as Word;
+        let offset = branch_offset(command);
 
         let pc = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
 
-        let result = pc + (offset << 1);
+        let result = pc + offset;
 
         self.set_word_reg(PROGRAM_COUNTER_INDEX, result);
     }

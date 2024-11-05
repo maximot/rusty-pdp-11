@@ -24,6 +24,7 @@ pub const OVERFLOW_FLAG_INDEX: Byte = 1; // Or V
 pub const ZERO_FLAG_INDEX: Byte = 2; // Or Z
 pub const NEGATIVE_FLAG_INDEX: Byte = 3; // Or N
 
+// TODO: FIX V FLAG
 // TODO: PROCESS COMMAND
 // TODO: INTERUPTIONS?
 pub struct CPU {
