@@ -1,9 +1,11 @@
 use super::{ Word, CPU, REG_COUNT };
 
+#[derive(Debug)]
 pub struct CPUStateDump {
     pub status: Word,
     pub registers: [Word; REG_COUNT],
-    pub running: bool
+    pub running: bool,
+    pub waiting: bool,
 }
 
 impl CPU {
@@ -12,6 +14,7 @@ impl CPU {
             status: self.status,
             registers: self.registers.clone(),
             running: self.running,
+            waiting: self.waiting,
         }
     }
 

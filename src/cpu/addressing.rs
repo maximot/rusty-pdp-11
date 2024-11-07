@@ -1,6 +1,6 @@
 use crate::mem::Memory;
 
-use super::{ Address, Byte, Number, CPU, PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES };
+use super::{ Address, Byte, Number, Word, CPU, PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES };
 
 // Addressing
 impl CPU {
@@ -37,9 +37,26 @@ impl CPU {
     pub (in super) fn get_immediate_address(&mut self, _memory: &Memory, reg_index: Byte, _increment_by: Byte) -> Address {
         self.get_and_increment(reg_index, WORD_SIZE_BYTES).into()
     }
+
+    pub (in super) fn get_addressing_func(addressing: AddressingMode) -> impl Fn(&mut CPU, &Memory, Byte, Byte) -> Address {
+        match addressing {
+            AddressingMode::Register => panic!("Can't get addressing func for AddressingMode::Register"),
+            AddressingMode::RegisterDeferred => CPU::get_register_deferred_address,
+            AddressingMode::Autoicrement => CPU::get_autoincrement_address,
+            AddressingMode::AutoicrementDeferred => CPU::get_autoincrement_deferred_address,
+            AddressingMode::Autodecrement => CPU::get_autodecrement_address,
+            AddressingMode::AutodecrementDeferred => CPU::get_autodecrement_deferred_address,
+            AddressingMode::Index => CPU::get_index_address,
+            AddressingMode::IndexDeferred => CPU::get_index_deferred_address,
+            AddressingMode::Immediate => CPU::get_immediate_address,
+            AddressingMode::Absolute => CPU::get_autoincrement_deferred_address,
+            AddressingMode::Relative => CPU::get_index_address, 
+            AddressingMode::RelativeDeferred => CPU::get_index_deferred_address,
+        }
+    }
 }
 
-// Put
+// Put operand
 impl CPU {
     pub (in super) fn put_operand_value_with_addressing<T, N: Number<T>>(
         &mut self, 
@@ -52,17 +69,7 @@ impl CPU {
     ) {
         match addressing {
             AddressingMode::Register => self.put_addressing_register(reg_index, data, set_register),
-            AddressingMode::RegisterDeferred => self.put_operand_value(memory, write_memory, CPU::get_register_deferred_address, reg_index, data),
-            AddressingMode::Autoicrement => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_address, reg_index, data),
-            AddressingMode::AutoicrementDeferred => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
-            AddressingMode::Autodecrement => self.put_operand_value(memory, write_memory, CPU::get_autodecrement_address, reg_index, data),
-            AddressingMode::AutodecrementDeferred => self.put_operand_value(memory, write_memory, CPU::get_autodecrement_deferred_address, reg_index, data),
-            AddressingMode::Index => self.put_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
-            AddressingMode::IndexDeferred => self.put_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
-            AddressingMode::Immediate => self.put_operand_value(memory, write_memory, CPU::get_immediate_address, reg_index, data),
-            AddressingMode::Absolute => self.put_operand_value(memory, write_memory, CPU::get_autoincrement_deferred_address, reg_index, data),
-            AddressingMode::Relative => self.put_operand_value(memory, write_memory, CPU::get_index_address, reg_index, data),
-            AddressingMode::RelativeDeferred => self.put_operand_value(memory, write_memory, CPU::get_index_deferred_address, reg_index, data),
+            _ => self.put_operand_value(memory, write_memory, Self::get_addressing_func(addressing), reg_index, data),
         }
     }
 
@@ -82,7 +89,7 @@ impl CPU {
     }
 }
 
-// Get
+// Get operand
 impl CPU {
     pub (in super) fn get_operand_value_with_addressing<T, N: Number<T>>(
         &mut self, 
@@ -94,17 +101,7 @@ impl CPU {
     ) -> N {
         match addressing {
             AddressingMode::Register => self.get_addressing_register(reg_index, get_register),
-            AddressingMode::RegisterDeferred => self.get_operand_value(memory, read_memory, CPU::get_register_deferred_address, reg_index),
-            AddressingMode::Autoicrement => self.get_operand_value(memory, read_memory, CPU::get_autoincrement_address, reg_index),
-            AddressingMode::AutoicrementDeferred => self.get_operand_value(memory, read_memory, CPU::get_autoincrement_deferred_address, reg_index),
-            AddressingMode::Autodecrement => self.get_operand_value(memory, read_memory, CPU::get_autodecrement_address, reg_index),
-            AddressingMode::AutodecrementDeferred => self.get_operand_value(memory, read_memory, CPU::get_autodecrement_deferred_address, reg_index),
-            AddressingMode::Index => self.get_operand_value(memory, read_memory, CPU::get_index_address, reg_index),
-            AddressingMode::IndexDeferred => self.get_operand_value(memory, read_memory, CPU::get_index_deferred_address, reg_index),
-            AddressingMode::Immediate => self.get_operand_value(memory, read_memory, CPU::get_immediate_address, reg_index),
-            AddressingMode::Absolute => self.get_operand_value(memory, read_memory, CPU::get_autoincrement_deferred_address, reg_index),
-            AddressingMode::Relative => self.get_operand_value(memory, read_memory, CPU::get_index_address, reg_index),
-            AddressingMode::RelativeDeferred => self.get_operand_value(memory, read_memory, CPU::get_index_deferred_address, reg_index),
+            _ => self.get_operand_value(memory, read_memory, Self::get_addressing_func(addressing), reg_index),
         }
     }
 
@@ -120,6 +117,18 @@ impl CPU {
 
     fn get_addressing_register<T, N: Number<T>>(&mut self, reg_index: Byte, get_register: impl Fn(&mut CPU, Byte) -> N) -> N {
         get_register(self, reg_index)
+    }
+}
+
+// Get operand address
+impl CPU {
+    pub (in super) fn get_operand_address_with_addressing(
+        &mut self,
+        memory: &Memory, 
+        reg_index: Byte, 
+        addressing: AddressingMode, 
+    ) -> Address {
+        Self::get_addressing_func(addressing)(self, memory, reg_index, Word::size_bytes())
     }
 }
 

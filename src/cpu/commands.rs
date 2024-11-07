@@ -98,13 +98,13 @@ impl Default for Commands {
             // TODO: impl
             o_0_commands: HashMap::from([
                 command(0x0000, "HALT", CPU::do_halt),
-                command(0x0001, "WAIT", CPU::do_wait), // TODO
+                command(0x0001, "WAIT", CPU::do_wait),
                 command(0x0005, "RESET", CPU::do_nop), // TODO
                 command(0x00A0, "NOP", CPU::do_nop),
             ]), 
             // TODO: Opcode + impl
             o_1_commands: HashMap::from([
-                command(0x00A0, "JMP", CPU::do_nop), // TODO
+                command(0x0040, "JMP", CPU::do_jmp),
                 command(0x0A00, "CLR", CPU::do_clr),
                 command(0x8A00, "CLRB", CPU::do_clrb),
                 command(0x0A80, "INC", CPU::do_inc),
@@ -139,6 +139,7 @@ impl Default for Commands {
                 command(0x7400, "ASH", CPU::do_ash),
                 command(0x7600, "ASHC", CPU::do_ashc),
                 command(0x7800, "XOR", CPU::do_xor),
+                command(0x7E00, "SOB", CPU::do_sob),
             ]),
             // DONE: 
             o_2_commands: HashMap::from([

@@ -93,7 +93,7 @@ impl CPU {
     }
 }
 
-// Put
+// Put operand
 impl CPU {
     fn put_byte_by_operand(&mut self, memory: &mut Memory, operand: Byte, byte: Byte) {
         self.put_byte(memory, register_from_operand(operand), adressing_from_operand(operand), byte);
@@ -112,7 +112,7 @@ impl CPU {
     }
 }
 
-// Get
+// Get operand
 impl CPU {
     fn get_byte_by_operand(&mut self, memory: &Memory, operand: Byte) -> Byte {
         self.get_byte(memory, register_from_operand(operand), adressing_from_operand(operand))
@@ -128,6 +128,13 @@ impl CPU {
 
     fn get_word(&mut self, memory: &Memory, reg_index: Byte, addressing: AddressingMode) -> Word {
         self.get_operand_value_with_addressing(memory, reg_index, addressing, Memory::read_word, Self::get_word_from_reg)
+    }
+}
+
+// Get operand address
+impl CPU {
+    fn get_operand_address(&mut self, memory: &Memory, operand: Byte) -> Address {
+        self.get_operand_address_with_addressing(memory, register_from_operand(operand), adressing_from_operand(operand))
     }
 }
 

@@ -1,4 +1,4 @@
-use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
+use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
 use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, make_word, reg_operand, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
 
@@ -355,6 +355,13 @@ impl CPU {
         self.update_zero_flag(memory, !n_flag);
     }
 
+    pub fn do_jmp(&mut self, memory: &mut Memory, command: Word) {
+        let operand = adr_operand(command);
+
+        let address = self.get_operand_address(memory, operand);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, address as u16);
+    }
 }
 
 // One-and-a-half-operand
@@ -502,6 +509,21 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
         self.update_status_flags_bitwise(memory, result);
+    }
+
+    pub fn do_sob(&mut self, memory: &mut Memory, command: Word) {
+        let offset = adr_operand(command);
+        let reg_index = reg_operand(command);
+
+        let result = self.decrement_and_get(reg_index, 0x0001u16);
+
+        if !result.is_zero() {
+            let pc_value = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
+
+            let pc_result = pc_value - (offset << 1) as Word;
+
+            self.set_word_reg(PROGRAM_COUNTER_INDEX, pc_result);
+        }
     }
 }
 
