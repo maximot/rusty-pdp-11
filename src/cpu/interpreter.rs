@@ -10,6 +10,10 @@ impl CPU {
         self.running = false;
     }
 
+    pub fn do_wait(&mut self, _memory: &mut Memory, _command: Word) {
+        self.waiting = true;
+    }
+
     pub fn do_panic(&mut self, _memory: &mut Memory, _command: Word) {
         panic!("CPU panic!")
     }

@@ -98,7 +98,7 @@ impl Default for Commands {
             // TODO: impl
             o_0_commands: HashMap::from([
                 command(0x0000, "HALT", CPU::do_halt),
-                command(0x0001, "WAIT", CPU::do_nop), // TODO
+                command(0x0001, "WAIT", CPU::do_wait), // TODO
                 command(0x0005, "RESET", CPU::do_nop), // TODO
                 command(0x00A0, "NOP", CPU::do_nop),
             ]), 

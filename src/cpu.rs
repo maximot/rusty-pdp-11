@@ -31,6 +31,7 @@ pub struct CPU {
     registers: [Word; REG_COUNT],
     commands: Rc<Commands>,
     running: bool,
+    waiting: bool,
 }
 
 // Constructors
@@ -41,6 +42,7 @@ impl CPU {
             registers: [0; REG_COUNT],
             commands: commands,
             running: false,
+            waiting: false,
         }
     }
 }
@@ -58,20 +60,28 @@ impl CPU {
         self.set_word_reg(PROGRAM_COUNTER_INDEX, FIRST_COMMAND as Word);
 
         while self.running {
-            let (address, command_word) = self.next_command(memory);
-    
-            trace!("tick");
-            trace!("address 0x{address:04X}");
-            trace!("instruction 0x{command_word:04X}");
+            if !self.waiting {
+                self.step(memory);
+            }
 
-            let Command(command_opcode, command_name, command_interpreter) = 
-                self.command(command_word);
-
-            trace!("command 0x{command_opcode:04X} ({command_name})");  
-            command_interpreter(self, memory, command_word);
+            // TODO: INTERRUPTION + set waiting false
 
             //self.trace_registers();
         }
+    }
+
+    fn step(&mut self, memory: &mut Memory) {
+        let (address, command_word) = self.next_command(memory);
+    
+        trace!("tick");
+        trace!("address 0x{address:04X}");
+        trace!("instruction 0x{command_word:04X}");
+
+        let Command(command_opcode, command_name, command_interpreter) = 
+            self.command(command_word);
+
+        trace!("command 0x{command_opcode:04X} ({command_name})");  
+        command_interpreter(self, memory, command_word);
     }
 
     fn next_command(&mut self, memory: &mut Memory) -> (Address, Word) {
