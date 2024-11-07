@@ -9,7 +9,7 @@ pub const WORD_SIZE_BYTES: Word = 2;
 pub const WORD_SIZE_BITS: Word = BYTE_SIZE_BITS * WORD_SIZE_BYTES;
 
 #[inline(always)]
-pub fn word(low: Byte, high: Byte) -> Word {
+pub fn make_word(low: Byte, high: Byte) -> Word {
     (high as Word) << Byte::size_bits() | (low as Word)
 }
 

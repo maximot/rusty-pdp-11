@@ -72,7 +72,7 @@ pub fn branch_offset(command: Word) -> Word {
     command.low().register() << 1
 }
 
-// For One-and-a-half-operand instructions
+// For One-operand and One-and-a-half-operand instructions
 
 pub fn reg_operand(command: Word) -> Byte {
     ((command >> 6) & REG_MASK).low()
@@ -104,33 +104,33 @@ impl Default for Commands {
             ]), 
             // TODO: Opcode + impl
             o_1_commands: HashMap::from([
-                command(0x00A0, "JMP", CPU::do_nop),
-                command(0x00A0, "CLR", CPU::do_nop),
-                command(0x00A0, "CLRB", CPU::do_nop),
-                command(0x00A0, "INC", CPU::do_nop),
-                command(0x00A0, "INCB", CPU::do_nop),
-                command(0x00A0, "DEC", CPU::do_nop),
-                command(0x00A0, "DECB", CPU::do_nop),
-                command(0x00A0, "ADC", CPU::do_nop),
-                command(0x00A0, "ADCB", CPU::do_nop),
-                command(0x00A0, "SBC", CPU::do_nop),
-                command(0x00A0, "SBCB", CPU::do_nop),
-                command(0x00A0, "TST", CPU::do_nop),
-                command(0x00A0, "TSTB", CPU::do_nop),
-                command(0x00A0, "NEG", CPU::do_nop),
-                command(0x00A0, "NEGB", CPU::do_nop),
-                command(0x00A0, "COM", CPU::do_nop),
-                command(0x00A0, "COMB", CPU::do_nop),
-                command(0x00A0, "ROR", CPU::do_nop),
-                command(0x00A0, "RORB", CPU::do_nop),
-                command(0x00A0, "ROL", CPU::do_nop),
-                command(0x00A0, "ROLB", CPU::do_nop),
-                command(0x00A0, "ASR", CPU::do_nop),
-                command(0x00A0, "ASRB", CPU::do_nop),
-                command(0x00A0, "ASL", CPU::do_nop),
-                command(0x00A0, "ASLB", CPU::do_nop),
-                command(0x00A0, "SWAB", CPU::do_nop),
-                command(0x00A0, "SXT", CPU::do_nop),
+                command(0x00A0, "JMP", CPU::do_nop), // TODO
+                command(0x0A00, "CLR", CPU::do_clr),
+                command(0x8A00, "CLRB", CPU::do_clrb),
+                command(0x0A80, "INC", CPU::do_inc),
+                command(0x8A80, "INCB", CPU::do_incb),
+                command(0x0AC0, "DEC", CPU::do_dec),
+                command(0x8AC0, "DECB", CPU::do_decb),
+                command(0x0B40, "ADC", CPU::do_adc),
+                command(0x8B40, "ADCB", CPU::do_adcb),
+                command(0x0B80, "SBC", CPU::do_sdc),
+                command(0x8B80, "SBCB", CPU::do_sdcb),
+                command(0x0BC0, "TST", CPU::do_tst),
+                command(0x8BC0, "TSTB", CPU::do_tstb),
+                command(0x0B00, "NEG", CPU::do_neg),
+                command(0x8B00, "NEGB", CPU::do_negb),
+                command(0x0A40, "COM", CPU::do_com),
+                command(0x8A40, "COMB", CPU::do_comb),
+                command(0x0C00, "ROR", CPU::do_ror),
+                command(0x8C00, "RORB", CPU::do_rorb),
+                command(0x0C40, "ROL", CPU::do_rol),
+                command(0x8C40, "ROLB", CPU::do_rolb),
+                command(0x0C80, "ASR", CPU::do_asr),
+                command(0x8C80, "ASRB", CPU::do_asrb),
+                command(0x0CC0, "ASL", CPU::do_asl),
+                command(0x8CC0, "ASLB", CPU::do_aslb),
+                command(0x00C0, "SWAB", CPU::do_swab),
+                command(0x0DC0, "SXT", CPU::do_sxt),
             ]), 
             // DONE: 
             o_1_5_commands: HashMap::from([

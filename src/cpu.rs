@@ -164,9 +164,7 @@ impl CPU {
 // Flags
 impl CPU {
     fn update_status_flags_bitwise<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N) {
-        self.update_overflow_flag(memory, false);
-        self.update_zero_flag(memory, result.is_zero());
-        self.update_negative_flag(memory, result.is_negative());
+        self.update_status_flags(memory, result, self.carry_flag(), false);
     }
 
     fn update_status_flags<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N, carry_bit: bool, overflow_bit: bool) {

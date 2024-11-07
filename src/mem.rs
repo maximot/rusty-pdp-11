@@ -1,4 +1,4 @@
-use crate::utils::{word, Address, Byte, Number, Word};
+use crate::utils::{make_word, Address, Byte, Number, Word};
 
 const MEM_SIZE: usize = 2 << 16;
 
@@ -33,7 +33,7 @@ impl Memory {
         let high = self.read_byte(address + 1);
         let low = self.read_byte(address);
         
-        return word(low, high);
+        return make_word(low, high);
     }
 
     pub fn write_word(&mut self, address: Address, word: Word) -> Address {
