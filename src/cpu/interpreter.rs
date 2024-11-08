@@ -511,7 +511,7 @@ impl CPU {
         self.update_status_flags_bitwise(memory, result);
     }
 
-    pub fn do_sob(&mut self, memory: &mut Memory, command: Word) {
+    pub fn do_sob(&mut self, _memory: &mut Memory, command: Word) {
         let offset = adr_operand(command);
         let reg_index = reg_operand(command);
 
