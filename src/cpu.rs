@@ -1,9 +1,9 @@
-use std::rc::Rc;
+use std::{rc::Rc, sync::{Arc, Mutex}};
 
 use addressing::{adressing_from_operand, register_from_operand, AddressingMode};
 use commands::*;
 
-use crate::{mem::Memory, utils::*};
+use crate::{mem::{MappedMemoryWord, Memory, SimpleMappedMemoryWord}, utils::*};
 
 pub mod addressing;
 pub mod interpreter;
@@ -27,7 +27,7 @@ pub const NEGATIVE_FLAG_INDEX: Byte = 3; // Or N
 // TODO: PROCESS COMMAND
 // TODO: INTERUPTIONS?
 pub struct CPU {
-    status: Word, // Or PSW (Processor Status Word)
+    status: Arc<Mutex<SimpleMappedMemoryWord>>, // Or PSW (Processor Status Word)
     registers: [Word; REG_COUNT],
     commands: Rc<Commands>,
     running: bool,
@@ -38,7 +38,7 @@ pub struct CPU {
 impl CPU {
     pub fn new(commands: Rc<Commands>) -> Self {
         CPU {
-            status: 0x0000,
+            status: Arc::new(Mutex::new(SimpleMappedMemoryWord::new())),
             registers: [0; REG_COUNT],
             commands: commands,
             running: false,
@@ -55,13 +55,17 @@ impl Default for CPU {
 
 // Execution
 impl CPU {
-    pub fn run(&mut self, memory: &mut Memory) {
+    pub fn run(&mut self, mem: Arc<Mutex<Memory>>) {
+        let mut memory = mem.lock().unwrap();
+
+        memory.map_word(FLAGS_IN_MEMORY, self.status.clone());
+
         self.running = true;
         self.set_word_reg(PROGRAM_COUNTER_INDEX, FIRST_COMMAND as Word);
 
         while self.running {
             if !self.waiting {
-                self.step(memory);
+                self.step(&mut memory);
             }
 
             // TODO: INTERRUPTION + set waiting false
@@ -180,55 +184,58 @@ impl CPU {
 
 // Flags
 impl CPU {
-    fn update_status_flags_bitwise<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N) {
-        self.update_status_flags(memory, result, self.carry_flag(), false);
+    fn update_status_flags_bitwise<T, N: Number<T>>(&mut self, result: N) {
+        self.update_status_flags(result, self.carry_flag(), false);
     }
 
-    fn update_status_flags<T, N: Number<T>>(&mut self, memory: &mut Memory, result: N, carry_bit: bool, overflow_bit: bool) {
-        self.update_carry_flag(memory, carry_bit);
-        self.update_overflow_flag(memory, overflow_bit);
-        self.update_zero_flag(memory, result.is_zero());
-        self.update_negative_flag(memory, result.is_negative());
+    fn update_status_flags<T, N: Number<T>>(&mut self, result: N, carry_bit: bool, overflow_bit: bool) {
+        self.update_carry_flag(carry_bit);
+        self.update_overflow_flag(overflow_bit);
+        self.update_zero_flag(result.is_zero());
+        self.update_negative_flag(result.is_negative());
     }
 
-    fn update_carry_flag(&mut self, memory: &mut Memory, carry_bit: bool) {
-        self.status = self.status.set_n_bit(CARRY_FLAG_INDEX, carry_bit);
-        self.update_flags_in_memory(memory);
+    fn update_carry_flag(&mut self, carry_bit: bool) {
+        self.set_flag(CARRY_FLAG_INDEX, carry_bit);
     }
 
-    fn update_overflow_flag(&mut self, memory: &mut Memory, overflow_bit: bool) {
-        self.status = self.status.set_n_bit(OVERFLOW_FLAG_INDEX, overflow_bit);
-        self.update_flags_in_memory(memory);
+    fn update_overflow_flag(&mut self, overflow_bit: bool) {
+        self.set_flag(OVERFLOW_FLAG_INDEX, overflow_bit);
     }
 
-    fn update_zero_flag(&mut self, memory: &mut Memory, zero_bit: bool) {
-        self.status = self.status.set_n_bit(ZERO_FLAG_INDEX, zero_bit);
-        self.update_flags_in_memory(memory);
+    fn update_zero_flag(&mut self, zero_bit: bool) {
+        self.set_flag(ZERO_FLAG_INDEX, zero_bit);
     }
 
-    fn update_negative_flag(&mut self, memory: &mut Memory, negative_bit: bool) {
-        self.status = self.status.set_n_bit(NEGATIVE_FLAG_INDEX, negative_bit);
-        self.update_flags_in_memory(memory);
+    fn update_negative_flag(&mut self, negative_bit: bool) {
+        self.set_flag(NEGATIVE_FLAG_INDEX, negative_bit);
     }
 
     fn carry_flag(&self) -> bool {
-        self.status.get_n_bit(CARRY_FLAG_INDEX)
+        self.get_flag(CARRY_FLAG_INDEX)
     }
 
     fn overflow_flag(&self) -> bool {
-        self.status.get_n_bit(OVERFLOW_FLAG_INDEX)
+        self.get_flag(OVERFLOW_FLAG_INDEX)
     }
 
     fn zero_flag(&self) -> bool {
-        self.status.get_n_bit(ZERO_FLAG_INDEX)
+        self.get_flag(ZERO_FLAG_INDEX)
     }
 
     fn negative_flag(&self) -> bool {
-        self.status.get_n_bit(NEGATIVE_FLAG_INDEX)
+        self.get_flag(NEGATIVE_FLAG_INDEX)
     }
 
-    fn update_flags_in_memory(&self, memory: &mut Memory) {
-        memory.write_word(FLAGS_IN_MEMORY, self.status);
+    fn get_flag(&self, n: Byte) -> bool {
+        self.status.lock().unwrap().read_word().get_n_bit(n)
+    }
+
+    fn set_flag(&mut self, n: Byte, value: bool) {
+        let mut status_word = self.status.lock().unwrap();
+        let status_flags = status_word.read_word();
+
+        status_word.write_word(status_flags.set_n_bit(n, value));
     }
 }
 

@@ -26,7 +26,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, adr_operand(command), zero);
 
-        self.update_status_flags(memory, zero, false, false);
+        self.update_status_flags(zero, false, false);
     }
 
     pub fn do_clrb(&mut self, memory: &mut Memory, command: Word) {
@@ -34,7 +34,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, adr_operand(command), zero);
 
-        self.update_status_flags(memory, zero, false, false);
+        self.update_status_flags(zero, false, false);
     }
 
     pub fn do_inc(&mut self, memory: &mut Memory, command: Word) {
@@ -48,7 +48,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, has_carry(sum), has_signed_overflow(word, result));
+        self.update_status_flags(result, has_carry(sum), has_signed_overflow(word, result));
     }
 
     pub fn do_incb(&mut self, memory: &mut Memory, command: Word) {
@@ -62,7 +62,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, word_has_carry(sum), has_signed_overflow(byte, result));
+        self.update_status_flags(result, word_has_carry(sum), has_signed_overflow(byte, result));
     }
 
     pub fn do_dec(&mut self, memory: &mut Memory, command: Word) {
@@ -76,7 +76,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, has_carry(sub), has_signed_overflow(word, result));
+        self.update_status_flags(result, has_carry(sub), has_signed_overflow(word, result));
     }
 
     pub fn do_decb(&mut self, memory: &mut Memory, command: Word) {
@@ -90,7 +90,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, word_has_carry(sub), has_signed_overflow(byte, result));
+        self.update_status_flags(result, word_has_carry(sub), has_signed_overflow(byte, result));
     }
 
     pub fn do_adc(&mut self, memory: &mut Memory, command: Word) {
@@ -104,7 +104,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, has_carry(sum), has_signed_overflow(word, result));
+        self.update_status_flags(result, has_carry(sum), has_signed_overflow(word, result));
     }
 
     pub fn do_adcb(&mut self, memory: &mut Memory, command: Word) {
@@ -118,7 +118,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, word_has_carry(sum), has_signed_overflow(byte, result));
+        self.update_status_flags(result, word_has_carry(sum), has_signed_overflow(byte, result));
     }
 
     pub fn do_sdc(&mut self, memory: &mut Memory, command: Word) {
@@ -132,7 +132,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, has_carry(sub), has_signed_overflow(word, result));
+        self.update_status_flags(result, has_carry(sub), has_signed_overflow(word, result));
     }
 
     pub fn do_sdcb(&mut self, memory: &mut Memory, command: Word) {
@@ -146,7 +146,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, word_has_carry(sub), has_signed_overflow(byte, result));
+        self.update_status_flags(result, word_has_carry(sub), has_signed_overflow(byte, result));
     }
 
     pub fn do_tst(&mut self, memory: &mut Memory, command: Word) {
@@ -154,7 +154,7 @@ impl CPU {
 
         let word = self.get_word_by_operand(memory, operand);
 
-        self.update_status_flags(memory, word, false, false);
+        self.update_status_flags(word, false, false);
     }
 
     pub fn do_tstb(&mut self, memory: &mut Memory, command: Word) {
@@ -162,7 +162,7 @@ impl CPU {
 
         let byte = self.get_byte_by_operand(memory, operand);
 
-        self.update_status_flags(memory, byte, false, false);
+        self.update_status_flags(byte, false, false);
     }
 
     pub fn do_neg(&mut self, memory: &mut Memory, command: Word) {
@@ -174,7 +174,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, !result.is_zero(), !has_signed_overflow(word, result));
+        self.update_status_flags(result, !result.is_zero(), !has_signed_overflow(word, result));
     }
 
     pub fn do_negb(&mut self, memory: &mut Memory, command: Word) {
@@ -186,7 +186,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, !result.is_zero(), !has_signed_overflow(byte, result));
+        self.update_status_flags(result, !result.is_zero(), !has_signed_overflow(byte, result));
     }
 
     pub fn do_com(&mut self, memory: &mut Memory, command: Word) {
@@ -198,7 +198,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, true, false);
+        self.update_status_flags(result, true, false);
     }
 
     pub fn do_comb(&mut self, memory: &mut Memory, command: Word) {
@@ -210,7 +210,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, true, false);
+        self.update_status_flags(result, true, false);
     }
 
     pub fn do_ror(&mut self, memory: &mut Memory, command: Word) {
@@ -225,7 +225,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_rorb(&mut self, memory: &mut Memory, command: Word) {
@@ -240,7 +240,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_rol(&mut self, memory: &mut Memory, command: Word) {
@@ -255,7 +255,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_rolb(&mut self, memory: &mut Memory, command: Word) {
@@ -270,7 +270,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_asr(&mut self, memory: &mut Memory, command: Word) {
@@ -285,7 +285,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_asrb(&mut self, memory: &mut Memory, command: Word) {
@@ -300,7 +300,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_asl(&mut self, memory: &mut Memory, command: Word) {
@@ -314,7 +314,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_aslb(&mut self, memory: &mut Memory, command: Word) {
@@ -328,7 +328,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result, new_carry, new_carry ^ result.is_negative());
+        self.update_status_flags(result, new_carry, new_carry ^ result.is_negative());
     }
 
     pub fn do_swab(&mut self, memory: &mut Memory, command: Word) {
@@ -340,7 +340,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_status_flags(memory, result.low(), false, false);
+        self.update_status_flags(result.low(), false, false);
     }
 
     pub fn do_sxt(&mut self, memory: &mut Memory, command: Word) {
@@ -352,7 +352,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, operand, result);
 
-        self.update_zero_flag(memory, !n_flag);
+        self.update_zero_flag(!n_flag);
     }
 
     pub fn do_jmp(&mut self, memory: &mut Memory, command: Word) {
@@ -380,7 +380,7 @@ impl CPU {
         self.set_word_reg(dst_hi, result.high());
         self.set_word_reg(dst, result.low());
 
-        self.update_status_flags(memory, result, has_carry(result), false);
+        self.update_status_flags(result, has_carry(result), false);
     }
 
     pub fn do_div(&mut self, memory: &mut Memory, command: Word) {
@@ -399,8 +399,8 @@ impl CPU {
         let src_value = self.get_word_by_operand(memory, src) as LongWord;
 
         if src_value.is_zero() {
-            self.update_carry_flag(memory, true);
-            self.update_overflow_flag(memory, true);
+            self.update_carry_flag(true);
+            self.update_overflow_flag(true);
             return;
         }
 
@@ -410,7 +410,7 @@ impl CPU {
         self.set_word_reg(dst_hi, reminder.low());
         self.set_word_reg(dst, quotient.low());
 
-        self.update_status_flags(memory, quotient.low(), has_carry(quotient), false);
+        self.update_status_flags(quotient.low(), has_carry(quotient), false);
     }
 
     pub fn do_ash(&mut self, memory: &mut Memory, command: Word) {
@@ -423,7 +423,7 @@ impl CPU {
         let dst_value = self.get_word_from_reg(dst);
 
         if shift == 0 {
-            self.update_status_flags(memory, dst_value, false, false);
+            self.update_status_flags(dst_value, false, false);
             return;
         }
 
@@ -449,7 +449,7 @@ impl CPU {
             (intermediate_result & 0x0001u16) > 0
         };
 
-        self.update_status_flags(memory, result, carry, has_signed_overflow(dst_value, result));
+        self.update_status_flags(result, carry, has_signed_overflow(dst_value, result));
     }
 
     pub fn do_ashc(&mut self, memory: &mut Memory, command: Word) {
@@ -469,7 +469,7 @@ impl CPU {
         let dst_value = long_word(dst_lo_value, dst_hi_value);
 
         if shift == 0 {
-            self.update_status_flags(memory, dst_value, false, false);
+            self.update_status_flags(dst_value, false, false);
             return;
         }
 
@@ -496,7 +496,7 @@ impl CPU {
             (intermediate_result & 0x00000001u32) > 0
         };
 
-        self.update_status_flags(memory, result, carry, has_signed_overflow(dst_value, result));
+        self.update_status_flags(result, carry, has_signed_overflow(dst_value, result));
     }
 
     pub fn do_xor(&mut self, memory: &mut Memory, command: Word) {
@@ -508,7 +508,7 @@ impl CPU {
         let result = dst_value ^ src_value;
 
         self.put_word_by_operand(memory, dst, result);
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_sob(&mut self, _memory: &mut Memory, command: Word) {
@@ -534,7 +534,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst_operand(command), word_to_move);
 
-        self.update_status_flags_bitwise(memory, word_to_move);
+        self.update_status_flags_bitwise(word_to_move);
     }
 
     pub fn do_movb(&mut self, memory: &mut Memory, command: Word) {
@@ -542,7 +542,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst_operand(command), byte_to_move);
 
-        self.update_status_flags_bitwise(memory, byte_to_move);
+        self.update_status_flags_bitwise(byte_to_move);
     }
 
     pub fn do_add(&mut self, memory: &mut Memory, command: Word) {
@@ -557,7 +557,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(memory, result, has_carry(sum), has_signed_overflow(dst_value, result));
+        self.update_status_flags(result, has_carry(sum), has_signed_overflow(dst_value, result));
     }
 
     pub fn do_sub(&mut self, memory: &mut Memory, command: Word) {
@@ -572,7 +572,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags(memory, result, !has_carry(sub), has_signed_overflow(dst_value, result));
+        self.update_status_flags(result, !has_carry(sub), has_signed_overflow(dst_value, result));
     }
 
     pub fn do_cmp(&mut self, memory: &mut Memory, command: Word) {
@@ -583,7 +583,7 @@ impl CPU {
 
         let result = sub as Word;
 
-        self.update_status_flags(memory, result, !has_carry(sub), has_signed_overflow(src_value, result));
+        self.update_status_flags(result, !has_carry(sub), has_signed_overflow(src_value, result));
     }
 
     pub fn do_cmpb(&mut self, memory: &mut Memory, command: Word) {
@@ -594,7 +594,7 @@ impl CPU {
 
         let result = sub as Byte;
 
-        self.update_status_flags(memory, result, !word_has_carry(sub), has_signed_overflow(src_value, result));
+        self.update_status_flags(result, !word_has_carry(sub), has_signed_overflow(src_value, result));
     }
 
     pub fn do_bis(&mut self, memory: &mut Memory, command: Word) {
@@ -607,7 +607,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_bisb(&mut self, memory: &mut Memory, command: Word) {
@@ -620,7 +620,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_bic(&mut self, memory: &mut Memory, command: Word) {
@@ -633,7 +633,7 @@ impl CPU {
 
         self.put_word_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_bicb(&mut self, memory: &mut Memory, command: Word) {
@@ -646,7 +646,7 @@ impl CPU {
 
         self.put_byte_by_operand(memory, dst, result);
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_bit(&mut self, memory: &mut Memory, command: Word) {
@@ -655,7 +655,7 @@ impl CPU {
 
         let result = src_value & dst_value;
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 
     pub fn do_bitb(&mut self, memory: &mut Memory, command: Word) {
@@ -664,7 +664,7 @@ impl CPU {
 
         let result = src_value & dst_value;
 
-        self.update_status_flags_bitwise(memory, result);
+        self.update_status_flags_bitwise(result);
     }
 }
 

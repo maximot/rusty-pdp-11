@@ -1,26 +1,48 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 use crate::utils::{make_word, Address, Byte, Number, Word};
 
 const MEM_SIZE: usize = 2 << 16;
 
-trait MappedMemoryWord {
+pub trait MappedMemoryWord {
     fn read_word(&self) -> Word;
 
     fn write_word(&mut self, word: Word);
 }
 
+pub struct SimpleMappedMemoryWord {
+    word: Word
+}
+
+impl SimpleMappedMemoryWord {
+    pub fn new() -> Self {
+        SimpleMappedMemoryWord {
+            word: 0x0000u16
+        }
+    }
+}
+
+impl MappedMemoryWord for SimpleMappedMemoryWord {
+    fn read_word(&self) -> Word {
+        self.word
+    }
+
+    fn write_word(&mut self, word: Word) {
+        self.word = word
+    }
+}
+
 pub struct Memory {
     bytes: [Byte; MEM_SIZE],
-    mapped: HashMap<Address, Box<dyn MappedMemoryWord>>,
+    mapped: HashMap<Address, Arc<Mutex<dyn MappedMemoryWord>>>,
 }
 
 impl Memory {
-    pub fn new() -> Self {
-        Memory {
+    pub fn new() -> Arc<Mutex<Self>> {
+        Arc::new(Mutex::new(Memory {
             bytes: [0; MEM_SIZE],
             mapped: HashMap::new(),
-        }
+        }))
     }
 
     pub fn read_byte(&self, address: Address) -> Byte {
@@ -28,7 +50,7 @@ impl Memory {
 
         let mapped_address = address & 0xFFFE;
         if let Some(mapped) = self.get_mapped(address) {
-            let word = mapped.as_ref().read_word();
+            let word = mapped.lock().unwrap().read_word();
 
             if address == mapped_address {
                 return word.low();
@@ -53,7 +75,7 @@ impl Memory {
                 make_word(0x00u8, data)
             };
 
-            mapped.as_mut().write_word(result)
+            mapped.lock().unwrap().write_word(result)
         }
 
         Self::next_byte_address(address)
@@ -63,7 +85,7 @@ impl Memory {
         Self::validate_word_address(address);
 
         if let Some(mapped) = self.get_mapped(address) {
-            return mapped.as_ref().read_word();
+            return mapped.lock().unwrap().read_word();
         }
     
         let high = self.read_byte(address + 1);
@@ -79,13 +101,13 @@ impl Memory {
         self.write_byte(address + 1, word.high());
 
         if let Some(mapped) = self.get_mapped_mut(address) {
-            mapped.as_mut().write_word(word);
+            mapped.lock().unwrap().write_word(word);
         }
 
         Self::next_word_address(address)
     }
 
-    pub fn map_word(&mut self, address: Address, mapped_word: Box<dyn MappedMemoryWord>) -> Address {
+    pub fn map_word(&mut self, address: Address, mapped_word: Arc<Mutex<dyn MappedMemoryWord>>) -> Address {
         Self::validate_word_address(address);
 
         self.mapped.insert(address, mapped_word);
@@ -101,11 +123,11 @@ impl Memory {
         Self::next_word_address(address)
     }
 
-    fn get_mapped_mut(&mut self, address: Address) -> Option<&mut Box<dyn MappedMemoryWord>> {
+    fn get_mapped_mut(&mut self, address: Address) -> Option<&mut Arc<Mutex<dyn MappedMemoryWord>>> {
         self.mapped.get_mut(&address)
     }
 
-    fn get_mapped(&self, address: Address) -> Option<&Box<dyn MappedMemoryWord>> {
+    fn get_mapped(&self, address: Address) -> Option<&Arc<Mutex<dyn MappedMemoryWord>>> {
         self.mapped.get(&address)
     }
 

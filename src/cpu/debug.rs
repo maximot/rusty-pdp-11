@@ -1,3 +1,5 @@
+use crate::mem::MappedMemoryWord;
+
 use super::{ Word, CPU, REG_COUNT };
 
 #[derive(Debug)]
@@ -11,7 +13,7 @@ pub struct CPUStateDump {
 impl CPU {
     pub fn dump_state(&self) -> CPUStateDump {
         CPUStateDump {
-            status: self.status,
+            status: self.status.lock().unwrap().read_word(),
             registers: self.registers.clone(),
             running: self.running,
             waiting: self.waiting,
@@ -23,7 +25,7 @@ impl CPU {
         for (i, register) in self.registers.iter().enumerate() {
             trace!("Reg{i} = 0x{register:04X}");
         }
-        trace!("PSW = 0x{:04X}", self.status);
+        trace!("PSW = 0x{:04X}", self.status.lock().unwrap().read_word());
         trace!("#######################");
     }
 }
