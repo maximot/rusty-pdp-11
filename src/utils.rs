@@ -4,9 +4,7 @@ pub type Byte = u8;
 pub type Word = u16;
 pub type LongWord = u32;
 
-pub const BYTE_SIZE_BITS: Word = 8;
 pub const WORD_SIZE_BYTES: Word = 2;
-pub const WORD_SIZE_BITS: Word = BYTE_SIZE_BITS * WORD_SIZE_BYTES;
 
 #[inline(always)]
 pub fn make_word(low: Byte, high: Byte) -> Word {

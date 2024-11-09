@@ -101,8 +101,18 @@ impl Default for Commands {
                 command(0x0001, "WAIT", CPU::do_wait),
                 command(0x0005, "RESET", CPU::do_nop), // TODO
                 command(0x00A0, "NOP", CPU::do_nop),
+                command(0x00A1, "CLC", CPU::do_clc),
+                command(0x00A2, "CLV", CPU::do_clv),
+                command(0x00A4, "CLZ", CPU::do_clz),
+                command(0x00A8, "CLN", CPU::do_cln),
+                command(0x00B1, "SEC", CPU::do_sec),
+                command(0x00B2, "SEV", CPU::do_sev),
+                command(0x00B4, "SEZ", CPU::do_sez),
+                command(0x00B8, "SEN", CPU::do_sen),
+                command(0x00AF, "CCC", CPU::do_ccc),
+                command(0x00BF, "SCC", CPU::do_scc),
             ]), 
-            // TODO: Opcode + impl
+            // DONE:
             o_1_commands: HashMap::from([
                 command(0x0040, "JMP", CPU::do_jmp),
                 command(0x0A00, "CLR", CPU::do_clr),

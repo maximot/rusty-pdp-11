@@ -17,6 +17,52 @@ impl CPU {
     pub fn do_panic(&mut self, _memory: &mut Memory, _command: Word) {
         panic!("CPU panic!")
     }
+
+    pub fn do_clc(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_carry_flag(false);
+    }
+
+    pub fn do_clv(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_overflow_flag(false);
+    }
+
+    pub fn do_clz(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_zero_flag(false);
+    }
+
+    pub fn do_cln(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_negative_flag(false);
+    }
+
+    pub fn do_sec(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_carry_flag(true);
+    }
+
+    pub fn do_sev(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_overflow_flag(true);
+    }
+
+    pub fn do_sez(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_zero_flag(true);
+    }
+
+    pub fn do_sen(&mut self, _memory: &mut Memory, _command: Word) {
+        self.update_negative_flag(true);
+    }
+
+    pub fn do_ccc(&mut self, memory: &mut Memory, command: Word) {
+        self.do_clc(memory, command);
+        self.do_clv(memory, command);
+        self.do_clz(memory, command);
+        self.do_cln(memory, command);
+    }
+
+    pub fn do_scc(&mut self, memory: &mut Memory, command: Word) {
+        self.do_sec(memory, command);
+        self.do_sev(memory, command);
+        self.do_sez(memory, command);
+        self.do_sen(memory, command);
+    }
 }
 
 // One-operand
