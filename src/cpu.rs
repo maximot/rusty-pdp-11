@@ -56,26 +56,28 @@ impl Default for CPU {
 // Execution
 impl CPU {
     pub fn run(&mut self, mem: Arc<Mutex<Memory>>) {
-        let mut memory = mem.lock().unwrap();
-
-        memory.map_word(FLAGS_IN_MEMORY, self.status.clone());
+        self.map_status_word(mem.clone());
 
         self.running = true;
         self.set_word_reg(PROGRAM_COUNTER_INDEX, FIRST_COMMAND as Word);
 
         while self.running {
             if !self.waiting {
-                self.step(&mut memory);
+                self.step(mem.clone());
             }
 
             // TODO: INTERRUPTION + set waiting false
 
             //self.trace_registers();
         }
+
+        self.unmap_status_word(mem.clone());
     }
 
-    fn step(&mut self, memory: &mut Memory) {
-        let (address, command_word) = self.next_command(memory);
+    fn step(&mut self, mem: Arc<Mutex<Memory>>) {
+        let mut memory = mem.lock().unwrap();
+
+        let (address, command_word) = self.next_command(&mut memory);
     
         trace!("tick");
         trace!("address 0x{address:04X}");
@@ -85,15 +87,23 @@ impl CPU {
             self.command(command_word);
 
         trace!("command 0x{command_opcode:04X} ({command_name})");  
-        command_interpreter(self, memory, command_word);
+        command_interpreter(self, &mut memory, command_word);
     }
 
     fn next_command(&mut self, memory: &mut Memory) -> (Address, Word) {
-        let address: Address = self.get_and_increment(PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES).into();
+        let address: Address = self.get_and_increment(PROGRAM_COUNTER_INDEX, Word::size_bytes().into()).into();
 
         let command: Word = memory.read_word(address);
 
         (address, command)
+    }
+
+    fn map_status_word(&mut self, mem: Arc<Mutex<Memory>>) {
+        mem.lock().unwrap().map_word(FLAGS_IN_MEMORY, self.status.clone());
+    }
+
+    fn unmap_status_word(&mut self, mem: Arc<Mutex<Memory>>) {
+        mem.lock().unwrap().unmap_word(FLAGS_IN_MEMORY);
     }
 }
 

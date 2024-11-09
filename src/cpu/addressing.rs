@@ -1,6 +1,6 @@
 use crate::mem::Memory;
 
-use super::{ Address, Byte, Number, Word, CPU, PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES };
+use super::{ Address, Byte, Number, Word, CPU, PROGRAM_COUNTER_INDEX };
 
 // Addressing
 impl CPU {
@@ -13,7 +13,7 @@ impl CPU {
     }
 
     pub (in super) fn get_autoincrement_deferred_address(&mut self, memory: &Memory, reg_index: Byte, _increment_by: Byte) -> Address {
-        memory.read_word(self.get_and_increment(reg_index, WORD_SIZE_BYTES).into()).into()
+        memory.read_word(self.get_and_increment(reg_index, Word::size_bytes().into()).into()).into()
     }
 
     pub (in super) fn get_autodecrement_address(&mut self, _memory: &Memory, reg_index: Byte, increment_by: Byte) -> Address {
@@ -21,11 +21,11 @@ impl CPU {
     }
 
     pub (in super) fn get_autodecrement_deferred_address(&mut self, memory: &Memory, reg_index: Byte, _increment_by: Byte) -> Address {
-        memory.read_word(self.decrement_and_get(reg_index, WORD_SIZE_BYTES).into()).into()
+        memory.read_word(self.decrement_and_get(reg_index, Word::size_bytes().into()).into()).into()
     }
 
     pub (in super) fn get_index_address(&mut self, memory: &Memory, reg_index: Byte, _increment_by: Byte) -> Address {
-        let n = memory.read_word(self.get_and_increment(PROGRAM_COUNTER_INDEX, WORD_SIZE_BYTES).into());
+        let n = memory.read_word(self.get_and_increment(PROGRAM_COUNTER_INDEX, Word::size_bytes().into()).into());
 
         (n + self.get_word_from_reg(reg_index)).into()
     }
@@ -35,7 +35,7 @@ impl CPU {
     }
 
     pub (in super) fn get_immediate_address(&mut self, _memory: &Memory, reg_index: Byte, _increment_by: Byte) -> Address {
-        self.get_and_increment(reg_index, WORD_SIZE_BYTES).into()
+        self.get_and_increment(reg_index, Word::size_bytes().into()).into()
     }
 
     pub (in super) fn get_addressing_func(addressing: AddressingMode) -> impl Fn(&mut CPU, &Memory, Byte, Byte) -> Address {
