@@ -1,6 +1,6 @@
 use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, make_word, reg_operand, word_has_carry, Byte, CARRY_FLAG_INDEX, CPU, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, ZERO_FLAG_INDEX };
+use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, low_reg_operand, make_word, reg_operand, word_has_carry, Byte, CARRY_FLAG_INDEX, CPU, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, STACK_POINTER_INDEX, ZERO_FLAG_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -19,10 +19,22 @@ impl CPU {
     }
 }
 
-// Set priority
+// Set priority & some Control Flow
 impl CPU {
     pub fn do_spl(&mut self, _memory: &mut Memory, command: Word) {
         self.update_priority(command.low());
+    }
+
+    pub fn do_rts(&mut self, memory: &mut Memory, command: Word) {
+        let reg = low_reg_operand(command);
+
+        let reg_value = self.get_word_from_reg(reg);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, reg_value);
+
+        let stack_value = self.pop_stack(memory);
+
+        self.set_word_reg(reg, stack_value);
     }
 }
 
@@ -570,6 +582,21 @@ impl CPU {
 
             self.set_word_reg(PROGRAM_COUNTER_INDEX, pc_result);
         }
+    }
+
+    pub fn do_jsr(&mut self, memory: &mut Memory, command: Word) {
+        let reg = reg_operand(command);
+
+        let operand = adr_operand(command);
+
+        let reg_value = self.get_word_from_reg(reg);
+        let address = self.get_operand_address(memory, operand);
+
+        self.push_stack(memory, reg_value);
+
+        let pc_value = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
+        self.set_word_reg(reg, pc_value);
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, address as Word);
     }
 }
 

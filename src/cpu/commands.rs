@@ -15,7 +15,7 @@ use super::CPU;
 pub const O_0_MASK: Word = 0xFFFF;
 
 /** 
- * Priority command opcode mask
+ * Priority & one-reg command opcode mask
  * 1111111111111000
  * FEDCBA9876543210
  */
@@ -92,6 +92,10 @@ pub fn reg_operand(command: Word) -> Byte {
     ((command >> 6) & REG_MASK).low()
 }
 
+pub fn low_reg_operand(command: Word) -> Byte {
+    (command & REG_MASK).low()
+}
+
 pub fn adr_operand(command: Word) -> Byte {
     dst_operand(command)
 }
@@ -120,12 +124,12 @@ impl Default for Commands {
             ]), 
             p_commands: HashMap::from([
                 command(0x0098, "SPL", CPU::do_spl),
+                command(0x0080, "RTS", CPU::do_rts),
             ]),
             c_commands: HashMap::from([
                 command(0x00B0, "SE*", CPU::do_se),
                 command(0x00A0, "CL*", CPU::do_cl),
             ]),
-            // DONE:
             o_1_commands: HashMap::from([
                 command(0x0040, "JMP", CPU::do_jmp),
                 command(0x0A00, "CLR", CPU::do_clr),
@@ -155,7 +159,6 @@ impl Default for Commands {
                 command(0x00C0, "SWAB", CPU::do_swab),
                 command(0x0DC0, "SXT", CPU::do_sxt),
             ]), 
-            // DONE: 
             o_1_5_commands: HashMap::from([
                 command(0x7000, "MUL", CPU::do_mul),
                 command(0x7200, "DIV", CPU::do_div),
@@ -163,8 +166,8 @@ impl Default for Commands {
                 command(0x7600, "ASHC", CPU::do_ashc),
                 command(0x7800, "XOR", CPU::do_xor),
                 command(0x7E00, "SOB", CPU::do_sob),
+                command(0x0800, "JSR", CPU::do_jsr),
             ]),
-            // DONE: 
             o_2_commands: HashMap::from([
                 command(0x1000, "MOV", CPU::do_mov),
                 command(0x9000, "MOVB", CPU::do_movb),
@@ -178,8 +181,7 @@ impl Default for Commands {
                 command(0xD000, "BISB", CPU::do_bisb),
                 command(0x6000, "ADD", CPU::do_add),
                 command(0xE000, "SUB", CPU::do_sub),
-            ]), 
-            // DONE:
+            ]),
             b_commands: HashMap::from([
                 command(0x0100, "BR", CPU::do_br),
                 command(0x0200, "BNE", CPU::do_bne),

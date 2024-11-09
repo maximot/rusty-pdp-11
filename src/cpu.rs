@@ -197,6 +197,17 @@ impl CPU {
     }
 }
 
+// Stack 
+impl CPU {
+    fn push_stack(&mut self, memory: &mut Memory, word: Word) {
+        self.put_word(memory, STACK_POINTER_INDEX, AddressingMode::Autodecrement, word);
+    }
+
+    fn pop_stack(&mut self, memory: &Memory) -> Word {
+        self.get_word(memory, STACK_POINTER_INDEX, AddressingMode::Autoicrement)
+    }
+}
+
 // Flags
 impl CPU {
     fn update_status_flags_bitwise<T, N: Number<T>>(&mut self, result: N) {
