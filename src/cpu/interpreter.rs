@@ -1,6 +1,6 @@
 use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, make_word, reg_operand, word_has_carry, Byte, CPU, PROGRAM_COUNTER_INDEX };
+use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, make_word, reg_operand, word_has_carry, Byte, CARRY_FLAG_INDEX, CPU, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, ZERO_FLAG_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -17,58 +17,51 @@ impl CPU {
     pub fn do_panic(&mut self, _memory: &mut Memory, _command: Word) {
         panic!("CPU panic!")
     }
-
-    pub fn do_clc(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_carry_flag(false);
-    }
-
-    pub fn do_clv(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_overflow_flag(false);
-    }
-
-    pub fn do_clz(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_zero_flag(false);
-    }
-
-    pub fn do_cln(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_negative_flag(false);
-    }
-
-    pub fn do_sec(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_carry_flag(true);
-    }
-
-    pub fn do_sev(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_overflow_flag(true);
-    }
-
-    pub fn do_sez(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_zero_flag(true);
-    }
-
-    pub fn do_sen(&mut self, _memory: &mut Memory, _command: Word) {
-        self.update_negative_flag(true);
-    }
-
-    pub fn do_ccc(&mut self, memory: &mut Memory, command: Word) {
-        self.do_clc(memory, command);
-        self.do_clv(memory, command);
-        self.do_clz(memory, command);
-        self.do_cln(memory, command);
-    }
-
-    pub fn do_scc(&mut self, memory: &mut Memory, command: Word) {
-        self.do_sec(memory, command);
-        self.do_sev(memory, command);
-        self.do_sez(memory, command);
-        self.do_sen(memory, command);
-    }
 }
 
 // Set priority
 impl CPU {
     pub fn do_spl(&mut self, _memory: &mut Memory, command: Word) {
         self.update_priority(command.low());
+    }
+}
+
+// Set/clear flags
+impl CPU {
+    pub fn do_se(&mut self, _memory: &mut Memory, command: Word) {
+        if command.get_n_bit(CARRY_FLAG_INDEX) {
+            self.update_carry_flag(true);
+        }
+
+        if command.get_n_bit(OVERFLOW_FLAG_INDEX) {
+            self.update_overflow_flag(true);
+        }
+
+        if command.get_n_bit(ZERO_FLAG_INDEX) {
+            self.update_zero_flag(true);
+        }
+
+        if command.get_n_bit(NEGATIVE_FLAG_INDEX) {
+            self.update_negative_flag(true);
+        }
+    }
+
+    pub fn do_cl(&mut self, _memory: &mut Memory, command: Word) {
+        if command.get_n_bit(CARRY_FLAG_INDEX) {
+            self.update_carry_flag(false);
+        }
+
+        if command.get_n_bit(OVERFLOW_FLAG_INDEX) {
+            self.update_overflow_flag(false);
+        }
+
+        if command.get_n_bit(ZERO_FLAG_INDEX) {
+            self.update_zero_flag(false);
+        }
+
+        if command.get_n_bit(NEGATIVE_FLAG_INDEX) {
+            self.update_negative_flag(false);
+        }
     }
 }
 

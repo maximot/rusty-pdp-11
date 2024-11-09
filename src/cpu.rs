@@ -23,6 +23,7 @@ pub const CARRY_FLAG_INDEX: Byte = 0; // Or C
 pub const OVERFLOW_FLAG_INDEX: Byte = 1; // Or V
 pub const ZERO_FLAG_INDEX: Byte = 2; // Or Z
 pub const NEGATIVE_FLAG_INDEX: Byte = 3; // Or N
+pub const TRAP_FLAG_INDEX: Byte = 4; // Or T
 
 pub const PRIORITY_LOW_BIT_INDEX: Byte = 5;
 pub const PRIORITY_MIDDLE_BIT_INDEX: Byte = 6;
@@ -225,6 +226,10 @@ impl CPU {
         self.set_flag(NEGATIVE_FLAG_INDEX, negative_bit);
     }
 
+    fn update_trap_flag(&mut self, trap_status: bool) {
+        self.set_flag(TRAP_FLAG_INDEX, trap_status);
+    }
+
     fn update_priority(&mut self, priority: Byte) {
         self.set_flag(PRIORITY_LOW_BIT_INDEX, priority.get_n_bit(0));
         self.set_flag(PRIORITY_MIDDLE_BIT_INDEX, priority.get_n_bit(1));
@@ -245,6 +250,10 @@ impl CPU {
 
     fn negative_flag(&self) -> bool {
         self.get_flag(NEGATIVE_FLAG_INDEX)
+    }
+
+    fn trap_flag(&self) -> bool {
+        self.get_flag(TRAP_FLAG_INDEX)
     }
 
     fn current_priority(&self) -> Byte {

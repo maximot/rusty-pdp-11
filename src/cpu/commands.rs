@@ -22,6 +22,13 @@ pub const O_0_MASK: Word = 0xFFFF;
 pub const P_MASK: Word = 0xFFF8;
 
 /**
+ * Consition codes set/reset mask
+ * 1111111111110000
+ * FEDCBA9876543210
+ */
+pub const C_MASK: Word = 0xFFF0;
+
+/**
  * One-operand command opcode mask
  * 1111111111000000
  * FEDCBA9876543210
@@ -94,6 +101,7 @@ pub struct Command(pub Word, pub &'static str, pub fn(&mut CPU, &mut Memory, Wor
 pub struct Commands {
     pub o_0_commands: HashMap<Word, Command>,
     pub p_commands: HashMap<Word, Command>,
+    pub c_commands: HashMap<Word, Command>,
     pub o_1_commands: HashMap<Word, Command>,
     pub o_1_5_commands: HashMap<Word, Command>,
     pub o_2_commands: HashMap<Word, Command>,
@@ -109,19 +117,13 @@ impl Default for Commands {
                 command(0x0001, "WAIT", CPU::do_wait),
                 command(0x0005, "RESET", CPU::do_nop), // TODO
                 command(0x00A0, "NOP", CPU::do_nop),
-                command(0x00A1, "CLC", CPU::do_clc),
-                command(0x00A2, "CLV", CPU::do_clv),
-                command(0x00A4, "CLZ", CPU::do_clz),
-                command(0x00A8, "CLN", CPU::do_cln),
-                command(0x00B1, "SEC", CPU::do_sec),
-                command(0x00B2, "SEV", CPU::do_sev),
-                command(0x00B4, "SEZ", CPU::do_sez),
-                command(0x00B8, "SEN", CPU::do_sen),
-                command(0x00AF, "CCC", CPU::do_ccc),
-                command(0x00BF, "SCC", CPU::do_scc),
             ]), 
             p_commands: HashMap::from([
                 command(0x0098, "SPL", CPU::do_spl),
+            ]),
+            c_commands: HashMap::from([
+                command(0x00B0, "SE*", CPU::do_se),
+                command(0x00A0, "CL*", CPU::do_cl),
             ]),
             // DONE:
             o_1_commands: HashMap::from([
@@ -212,6 +214,10 @@ impl CPU {
         }
 
         if let Some(command) = self.commands.p_commands.get(&(command_word & P_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.c_commands.get(&(command_word & C_MASK)) {
             return command;
         }
 
