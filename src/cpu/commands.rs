@@ -14,6 +14,13 @@ use super::CPU;
  */
 pub const O_0_MASK: Word = 0xFFFF;
 
+/** 
+ * Priority command opcode mask
+ * 1111111111111000
+ * FEDCBA9876543210
+ */
+pub const P_MASK: Word = 0xFFF8;
+
 /**
  * One-operand command opcode mask
  * 1111111111000000
@@ -86,6 +93,7 @@ pub struct Command(pub Word, pub &'static str, pub fn(&mut CPU, &mut Memory, Wor
 
 pub struct Commands {
     pub o_0_commands: HashMap<Word, Command>,
+    pub p_commands: HashMap<Word, Command>,
     pub o_1_commands: HashMap<Word, Command>,
     pub o_1_5_commands: HashMap<Word, Command>,
     pub o_2_commands: HashMap<Word, Command>,
@@ -112,6 +120,9 @@ impl Default for Commands {
                 command(0x00AF, "CCC", CPU::do_ccc),
                 command(0x00BF, "SCC", CPU::do_scc),
             ]), 
+            p_commands: HashMap::from([
+                command(0x0098, "SPL", CPU::do_spl),
+            ]),
             // DONE:
             o_1_commands: HashMap::from([
                 command(0x0040, "JMP", CPU::do_jmp),
@@ -197,6 +208,10 @@ fn command(opcode: Word, name: &'static str, interpretation: fn(&mut CPU, &mut M
 impl CPU {
     pub (in super) fn command(&self, command_word: Word) -> &Command {
         if let Some(command) = self.commands.o_0_commands.get(&(command_word & O_0_MASK)) {
+            return command;
+        }
+
+        if let Some(command) = self.commands.p_commands.get(&(command_word & P_MASK)) {
             return command;
         }
 

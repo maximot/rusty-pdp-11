@@ -24,6 +24,10 @@ pub const OVERFLOW_FLAG_INDEX: Byte = 1; // Or V
 pub const ZERO_FLAG_INDEX: Byte = 2; // Or Z
 pub const NEGATIVE_FLAG_INDEX: Byte = 3; // Or N
 
+pub const PRIORITY_LOW_BIT_INDEX: Byte = 5;
+pub const PRIORITY_MIDDLE_BIT_INDEX: Byte = 6;
+pub const PRIORITY_HIGH_BIT_INDEX: Byte = 7;
+
 // TODO: PROCESS COMMAND
 // TODO: INTERUPTIONS?
 pub struct CPU {
@@ -221,6 +225,12 @@ impl CPU {
         self.set_flag(NEGATIVE_FLAG_INDEX, negative_bit);
     }
 
+    fn update_priority(&mut self, priority: Byte) {
+        self.set_flag(PRIORITY_LOW_BIT_INDEX, priority.get_n_bit(0));
+        self.set_flag(PRIORITY_MIDDLE_BIT_INDEX, priority.get_n_bit(1));
+        self.set_flag(PRIORITY_HIGH_BIT_INDEX, priority.get_n_bit(2));
+    }
+
     fn carry_flag(&self) -> bool {
         self.get_flag(CARRY_FLAG_INDEX)
     }
@@ -235,6 +245,17 @@ impl CPU {
 
     fn negative_flag(&self) -> bool {
         self.get_flag(NEGATIVE_FLAG_INDEX)
+    }
+
+    fn current_priority(&self) -> Byte {
+        let low = self.get_flag(PRIORITY_LOW_BIT_INDEX);
+        let middle = self.get_flag(PRIORITY_MIDDLE_BIT_INDEX);
+        let high = self.get_flag(PRIORITY_HIGH_BIT_INDEX);
+
+        0x00u8
+            .set_n_bit(0, low)
+            .set_n_bit(1, middle)
+            .set_n_bit(2, high)
     }
 
     fn get_flag(&self, n: Byte) -> bool {

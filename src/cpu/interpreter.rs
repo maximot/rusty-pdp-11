@@ -65,6 +65,13 @@ impl CPU {
     }
 }
 
+// Set priority
+impl CPU {
+    pub fn do_spl(&mut self, _memory: &mut Memory, command: Word) {
+        self.update_priority(command.low());
+    }
+}
+
 // One-operand
 impl CPU {
     pub fn do_clr(&mut self, memory: &mut Memory, command: Word) {
