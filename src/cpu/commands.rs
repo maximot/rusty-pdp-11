@@ -6,6 +6,7 @@ use super::CPU;
 
 // https://www.teach.cs.toronto.edu/~ajr/258/pdp11.pdf
 // https://en.wikipedia.org/wiki/PDP-11_architecture
+// https://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf
 
 /**
  * Zero-operand command opcode mask
@@ -115,6 +116,7 @@ pub struct Commands {
 impl Default for Commands {
     fn default() -> Self {
         Self { 
+            // TODO: MARK, EMT, TRAP, BPT, IOT, RTI, RTT, MFPI, MTPI, RESET
             // TODO: impl
             o_0_commands: HashMap::from([
                 command(0x0000, "HALT", CPU::do_halt),
