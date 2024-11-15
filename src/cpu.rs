@@ -11,6 +11,7 @@ pub mod debug;
 pub mod commands;
 
 pub const FIRST_COMMAND: Address = 0x0200;
+pub const STACK_START: Address = 0x0200;
 
 pub const FLAGS_IN_MEMORY: Address = 0xFFFE;
 
@@ -30,14 +31,34 @@ pub const PRIORITY_LOW_BIT_INDEX: Byte = 5;
 pub const PRIORITY_MIDDLE_BIT_INDEX: Byte = 6;
 pub const PRIORITY_HIGH_BIT_INDEX: Byte = 7;
 
-// TODO: PROCESS COMMAND
-// TODO: INTERUPTIONS?
+#[derive(Debug,Clone,Copy)]
+pub struct CpuInterruptionStatus {
+    pub interrupted: bool,
+    pub int_address: Word,
+}
+
+impl CpuInterruptionStatus {
+    pub fn new(interrupted: bool, int_address: Word) -> Self {
+        CpuInterruptionStatus {
+            interrupted: interrupted,
+            int_address: int_address,
+        }
+    }
+}
+
+impl Default for CpuInterruptionStatus {
+    fn default() -> Self {
+        Self::new(false, 0x0000u16)
+    }
+}
+
 pub struct CPU {
     status: Arc<Mutex<SimpleMappedMemoryWord>>, // Or PSW (Processor Status Word)
     registers: [Word; REG_COUNT],
     commands: Rc<Commands>,
     running: bool,
     waiting: bool,
+    interruption: Arc<Mutex<CpuInterruptionStatus>>
 }
 
 // Constructors
@@ -46,9 +67,10 @@ impl CPU {
         CPU {
             status: Arc::new(Mutex::new(SimpleMappedMemoryWord::new())),
             registers: [0; REG_COUNT],
-            commands: commands,
+            commands,
             running: false,
             waiting: false,
+            interruption: Arc::new(Mutex::new(CpuInterruptionStatus::default())),
         }
     }
 }
@@ -61,19 +83,29 @@ impl Default for CPU {
 
 // Execution
 impl CPU {
+    pub fn interrupt(&mut self, address: Word) {
+        let mut interruption_status = self.interruption.lock().unwrap();
+
+        interruption_status.int_address = address;
+        interruption_status.interrupted = true;
+    }
+
     pub fn run(&mut self, mem: Arc<Mutex<Memory>>) {
         self.map_status_word(mem.clone());
 
         self.running = true;
         self.set_word_reg(PROGRAM_COUNTER_INDEX, FIRST_COMMAND as Word);
+        self.set_word_reg(STACK_POINTER_INDEX, STACK_START as Word);
 
         while self.running {
+            trace!("tick");
+
             if !self.waiting {
                 self.step(mem.clone());
+                //self.trace_registers();
             }
 
-            // TODO: INTERRUPTION + set waiting false
-
+            self.process_interruption_if_needed(mem.clone());
             //self.trace_registers();
         }
 
@@ -85,7 +117,7 @@ impl CPU {
 
         let (address, command_word) = self.next_command(&mut memory);
     
-        trace!("tick");
+        trace!("processing next instruction");
         trace!("address 0x{address:04X}");
         trace!("instruction 0x{command_word:04X}");
 
@@ -94,6 +126,10 @@ impl CPU {
 
         trace!("command 0x{command_opcode:04X} ({command_name})");  
         command_interpreter(self, &mut memory, command_word);
+
+        if self.trap_flag() {
+            self.do_bpt(&mut memory, 0x0000u16);
+        }
     }
 
     fn next_command(&mut self, memory: &mut Memory) -> (Address, Word) {
@@ -102,6 +138,29 @@ impl CPU {
         let command: Word = memory.read_word(address);
 
         (address, command)
+    }
+
+    fn process_interruption_if_needed(&mut self, mem: Arc<Mutex<Memory>>) {
+        let interruption_status = self.reset_interruption_status();
+
+        if interruption_status.interrupted {
+            let address: Address = interruption_status.int_address.into();
+            trace!("processing an interrupt from address 0x{address:04X}");
+
+            self.waiting = false;
+            let mut memory = mem.lock().unwrap();
+            self.perform_trap(&mut memory, address);
+        }
+    }
+
+    fn reset_interruption_status(&mut self) -> CpuInterruptionStatus {
+        let mut interruption_status = self.interruption.lock().unwrap();
+
+        let actual = interruption_status.clone();
+        interruption_status.interrupted = false;
+        interruption_status.int_address = 0;
+
+        actual
     }
 
     fn map_status_word(&mut self, mem: Arc<Mutex<Memory>>) {

@@ -902,7 +902,7 @@ impl CPU {
 
 // Perform trap
 impl CPU {
-    fn perform_trap(&mut self, memory: &mut Memory, trap_address: Address) {
+    pub (in super) fn perform_trap(&mut self, memory: &mut Memory, trap_address: Address) {
         let pc_value = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
         let psw_value = self.status_word();
 

@@ -116,8 +116,7 @@ pub struct Commands {
 impl Default for Commands {
     fn default() -> Self {
         Self { 
-            // TODO: EMT, TRAP, // OPTIONAL: MFPI, MFPD, MTPI, MTPD, RESET
-            // TODO: impl
+            // TODO: OPTIONAL: MFPI, MFPD, MTPI, MTPD, RESET
             o_0_commands: HashMap::from([
                 command(0x0000, "HALT", CPU::do_halt),
                 command(0x0001, "WAIT", CPU::do_wait),
