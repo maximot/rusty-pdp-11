@@ -1,6 +1,6 @@
-use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
+use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
 
-use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, low_reg_operand, make_word, reg_operand, word_has_carry, Byte, CARRY_FLAG_INDEX, CPU, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, STACK_POINTER_INDEX, ZERO_FLAG_INDEX };
+use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, low_reg_operand, make_word, reg_operand, word_has_carry, Address, Byte, CARRY_FLAG_INDEX, CPU, MARK_POINTER_INDEX, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, STACK_POINTER_INDEX, ZERO_FLAG_INDEX };
 
 // Zero-oparand
 impl CPU {
@@ -16,6 +16,28 @@ impl CPU {
 
     pub fn do_panic(&mut self, _memory: &mut Memory, _command: Word) {
         panic!("CPU panic!")
+    }
+
+    pub fn do_rti(&mut self, memory: &mut Memory, _command: Word) {
+        let new_pc = self.pop_stack(memory);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, new_pc);
+
+        let new_psw = self.pop_stack(memory);
+
+        self.set_status_word(new_psw);
+    }
+
+    pub fn do_rtt(&mut self, memory: &mut Memory, command: Word) {
+        self.do_rti(memory, command);
+    }
+
+    pub fn do_bpt(&mut self, memory: &mut Memory, _command: Word) {
+        self.perform_trap(memory, 0x000C); // Trap from 14 (oct)
+    }
+
+    pub fn do_iot(&mut self, memory: &mut Memory, _command: Word) {
+        self.perform_trap(memory, 0x0010); // Trap from 20 (oct)
     }
 }
 
@@ -419,6 +441,26 @@ impl CPU {
         let address = self.get_operand_address(memory, operand);
 
         self.set_word_reg(PROGRAM_COUNTER_INDEX, address as u16);
+    }
+
+    pub fn do_mark(&mut self, memory: &mut Memory, command: Word) {
+        let operand = adr_operand(command);
+
+        let offset = operand << 1;
+
+        let stack_pointer_value = self.get_word_from_reg(STACK_POINTER_INDEX);
+
+        let result_stack_pointer = stack_pointer_value + (offset as Word);
+
+        self.set_word_reg(STACK_POINTER_INDEX, result_stack_pointer);
+        
+        let mp_value = self.get_word_from_reg(MARK_POINTER_INDEX);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, mp_value);
+
+        let stack_top_value = self.pop_stack(memory);
+
+        self.set_word_reg(MARK_POINTER_INDEX, stack_top_value);
     }
 }
 
@@ -847,5 +889,30 @@ impl CPU {
         if condition {
             self.do_br(memory, command);
         }
+    }
+
+    pub fn do_trap(&mut self, memory: &mut Memory, _command: Word) {
+        self.perform_trap(memory, 0x0018);
+    }
+
+    pub fn do_emt(&mut self, memory: &mut Memory, _command: Word) {
+        self.perform_trap(memory, 0x001C);
+    }
+}
+
+// Perform trap
+impl CPU {
+    fn perform_trap(&mut self, memory: &mut Memory, trap_address: Address) {
+        let pc_value = self.get_word_from_reg(PROGRAM_COUNTER_INDEX);
+        let psw_value = self.status_word();
+
+        self.push_stack(memory, psw_value);
+        self.push_stack(memory, pc_value);
+
+        let new_pc = memory.read_word(trap_address);
+        let new_psw = memory.read_word(trap_address + 2);
+
+        self.set_word_reg(PROGRAM_COUNTER_INDEX, new_pc);
+        self.set_status_word(new_psw);
     }
 }

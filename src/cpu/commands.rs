@@ -116,13 +116,17 @@ pub struct Commands {
 impl Default for Commands {
     fn default() -> Self {
         Self { 
-            // TODO: MARK, EMT, TRAP, BPT, IOT, RTI, RTT, MFPI, MTPI, RESET
+            // TODO: EMT, TRAP, // OPTIONAL: MFPI, MFPD, MTPI, MTPD, RESET
             // TODO: impl
             o_0_commands: HashMap::from([
                 command(0x0000, "HALT", CPU::do_halt),
                 command(0x0001, "WAIT", CPU::do_wait),
                 command(0x0005, "RESET", CPU::do_nop), // TODO
                 command(0x00A0, "NOP", CPU::do_nop),
+                command(0x0002, "RTI", CPU::do_rti),
+                command(0x0003, "BPT", CPU::do_bpt),
+                command(0x0004, "IOT", CPU::do_iot),
+                command(0x0006, "RTT", CPU::do_rtt),
             ]), 
             p_commands: HashMap::from([
                 command(0x0098, "SPL", CPU::do_spl),
@@ -160,6 +164,7 @@ impl Default for Commands {
                 command(0x8CC0, "ASLB", CPU::do_aslb),
                 command(0x00C0, "SWAB", CPU::do_swab),
                 command(0x0DC0, "SXT", CPU::do_sxt),
+                command(0x0D00, "MARK", CPU::do_mark),
             ]), 
             o_1_5_commands: HashMap::from([
                 command(0x7000, "MUL", CPU::do_mul),
@@ -200,6 +205,8 @@ impl Default for Commands {
                 command(0x8500, "BVS", CPU::do_bvs),
                 command(0x8600, "BHIS/BCC", CPU::do_bcc),
                 command(0x8700, "BCS/BLO", CPU::do_bcs),
+                command(0x8900, "TRAP", CPU::do_trap),
+                command(0x8800, "EMT", CPU::do_emt),
             ]),
         }
     }

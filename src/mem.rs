@@ -118,7 +118,11 @@ impl Memory {
     pub fn unmap_word(&mut self, address: Address) -> Address {
         Self::validate_word_address(address);
 
+        let value = self.read_word(address);
+
         self.mapped.remove(&address);
+
+        self.write_word(address, value);
 
         Self::next_word_address(address)
     }

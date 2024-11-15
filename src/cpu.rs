@@ -16,6 +16,7 @@ pub const FLAGS_IN_MEMORY: Address = 0xFFFE;
 
 pub const REG_COUNT: usize = 8;
 
+pub const MARK_POINTER_INDEX: Byte = 5; // Or MP
 pub const STACK_POINTER_INDEX: Byte = 6; // Or SP
 pub const PROGRAM_COUNTER_INDEX: Byte = 7; // Or PC
 
@@ -278,8 +279,16 @@ impl CPU {
             .set_n_bit(2, high)
     }
 
+    fn status_word(&self) -> Word {
+        self.status.lock().unwrap().read_word()
+    }
+
+    fn set_status_word(&mut self, new_psw: Word) {
+        self.status.lock().unwrap().write_word(new_psw);
+    } 
+
     fn get_flag(&self, n: Byte) -> bool {
-        self.status.lock().unwrap().read_word().get_n_bit(n)
+        self.status_word().get_n_bit(n)
     }
 
     fn set_flag(&mut self, n: Byte, value: bool) {
