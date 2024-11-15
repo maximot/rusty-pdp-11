@@ -69,13 +69,17 @@ impl Memory {
 
         let mapped_address = address & 0xFFFE;
         if let Some(mapped) = self.get_mapped_mut(address) {
+            let mut mapped_locked = mapped.lock().unwrap();
+            
+            let mapped_value = mapped_locked.read_word();
+
             let result = if address == mapped_address {
-                data.register()
+                make_word(data, mapped_value.high())
             } else {
-                make_word(0x00u8, data)
+                make_word(mapped_value.low(), data)
             };
 
-            mapped.lock().unwrap().write_word(result)
+            mapped_locked.write_word(result)
         }
 
         Self::next_byte_address(address)
