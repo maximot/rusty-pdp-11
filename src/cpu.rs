@@ -33,22 +33,24 @@ pub const PRIORITY_HIGH_BIT_INDEX: Byte = 7;
 
 #[derive(Debug,Clone,Copy)]
 pub struct CpuInterruptionStatus {
-    pub interrupted: bool,
     pub int_address: Word,
+    pub interrupted: bool,
+    pub priority: Byte,
 }
 
 impl CpuInterruptionStatus {
-    pub fn new(interrupted: bool, int_address: Word) -> Self {
+    pub fn new(interrupted: bool, int_address: Word, priority: Byte) -> Self {
         CpuInterruptionStatus {
-            interrupted: interrupted,
-            int_address: int_address,
+            int_address,
+            interrupted,
+            priority,
         }
     }
 }
 
 impl Default for CpuInterruptionStatus {
     fn default() -> Self {
-        Self::new(false, 0x0000u16)
+        Self::new(false, 0x0000u16, 0x00u8)
     }
 }
 
@@ -83,9 +85,12 @@ impl Default for CPU {
 
 // Execution
 impl CPU {
-    pub fn interrupt(&mut self, address: Word) {
+    pub fn interrupt(&mut self, address: Word, priority: Byte) {
+        assert!(priority <= 0x07);
+
         let mut interruption_status = self.interruption.lock().unwrap();
 
+        interruption_status.priority = priority;
         interruption_status.int_address = address;
         interruption_status.interrupted = true;
     }
@@ -141,26 +146,28 @@ impl CPU {
     }
 
     fn process_interruption_if_needed(&mut self, mem: Arc<Mutex<Memory>>) {
-        let interruption_status = self.reset_interruption_status();
-
-        if interruption_status.interrupted {
-            let address: Address = interruption_status.int_address.into();
-            trace!("processing an interrupt from address 0x{address:04X}");
+        if let Some(interruption_address) = self.get_interruption_address_if_needed() {
+            trace!("processing an interrupt from address 0x{interruption_address:04X}");
 
             self.waiting = false;
             let mut memory = mem.lock().unwrap();
-            self.perform_trap(&mut memory, address);
+            self.perform_trap(&mut memory, interruption_address);
         }
     }
 
-    fn reset_interruption_status(&mut self) -> CpuInterruptionStatus {
+    fn get_interruption_address_if_needed(&mut self) -> Option<Address> {
         let mut interruption_status = self.interruption.lock().unwrap();
+
+        if !interruption_status.interrupted || interruption_status.priority <= self.current_priority() {
+            return None;
+        }
 
         let actual = interruption_status.clone();
         interruption_status.interrupted = false;
         interruption_status.int_address = 0;
+        interruption_status.priority = 0;
 
-        actual
+        Some(actual.int_address.into())
     }
 
     fn map_status_word(&mut self, mem: Arc<Mutex<Memory>>) {
