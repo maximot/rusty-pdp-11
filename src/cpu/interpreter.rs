@@ -1,4 +1,4 @@
-use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
+use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
 
 use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, low_reg_operand, make_word, reg_operand, word_has_carry, Address, Byte, CARRY_FLAG_INDEX, CPU, MARK_POINTER_INDEX, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, STACK_POINTER_INDEX, ZERO_FLAG_INDEX };
 

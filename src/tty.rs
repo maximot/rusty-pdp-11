@@ -2,7 +2,7 @@ use std::{io::Write, sync::{Arc, Mutex}, thread, time::Duration};
 
 use console::Term;
 
-use crate::{cpu::{interruptions::InterruptionBus, CPU}, mem::{MappedMemoryWord, Memory, SimpleMappedMemoryWord}, utils::{blocking_queue::BlockingQueue, Address, Byte, Number, Word}};
+use crate::{cpu::interruptions::InterruptionBus, mem::{MappedMemoryWord, Memory, SimpleMappedMemoryWord}, utils::{blocking_queue::BlockingQueue, Address, Byte, Number, Word}};
 
 pub const RECEIVER_STATUS_ADDRESS: Address = 0xFF70;
 pub const RECEIVER_BUFFER_ADDRESS: Address = 0xFF72;
