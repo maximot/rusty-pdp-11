@@ -7,7 +7,7 @@ impl CPU {
     pub fn do_nop(&mut self, _memory: &mut Memory, _command: Word) { /* NO-OP */ }
 
     pub fn do_halt(&mut self, _memory: &mut Memory, _command: Word) {
-        self.running = false;
+        *self.running.lock().unwrap() = false;
     }
 
     pub fn do_wait(&mut self, _memory: &mut Memory, _command: Word) {

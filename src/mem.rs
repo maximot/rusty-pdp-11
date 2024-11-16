@@ -1,4 +1,6 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::sync::{Arc, Mutex};
+
+use dashmap::{mapref::one::{Ref, RefMut}, DashMap};
 
 use crate::utils::{make_word, Address, Byte, Number, Word};
 
@@ -56,14 +58,14 @@ impl MappedMemoryWord for SimpleMappedMemoryWord {
 
 pub struct Memory {
     bytes: [Byte; MEM_SIZE],
-    mapped: HashMap<Address, Arc<Mutex<dyn MappedMemoryWord>>>,
+    mapped: DashMap<Address,  Arc<Mutex<dyn MappedMemoryWord + Send + Sync>>>,
 }
 
 impl Memory {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Memory {
             bytes: [0; MEM_SIZE],
-            mapped: HashMap::new(),
+            mapped: DashMap::new(),
         }))
     }
 
@@ -117,7 +119,7 @@ impl Memory {
         Self::next_word_address(address)
     }
 
-    pub fn map_word(&mut self, address: Address, mapped_word: Arc<Mutex<dyn MappedMemoryWord>>) -> Address {
+    pub fn map_word(&mut self, address: Address, mapped_word: Arc<Mutex<dyn MappedMemoryWord + Send + Sync>>) -> Address {
         Self::validate_word_address(address);
 
         self.mapped.insert(address, mapped_word);
@@ -137,11 +139,11 @@ impl Memory {
         Self::next_word_address(address)
     }
 
-    fn get_mapped_mut(&mut self, address: Address) -> Option<&mut Arc<Mutex<dyn MappedMemoryWord>>> {
+    fn get_mapped_mut(&mut self, address: Address) -> Option<RefMut<Address, Arc<Mutex<dyn MappedMemoryWord + Send + Sync>>>> {
         self.mapped.get_mut(&address)
     }
 
-    fn get_mapped(&self, address: Address) -> Option<&Arc<Mutex<dyn MappedMemoryWord>>> {
+    fn get_mapped(&self, address: Address) -> Option<Ref<Address, Arc<Mutex<dyn MappedMemoryWord + Send + Sync>>>> {
         self.mapped.get(&address)
     }
 

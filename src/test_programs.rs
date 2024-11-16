@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{cpu::{debug::CPUStateDump, CPU, FIRST_COMMAND, REG_COUNT}, mem::Memory, utils::{Byte, Word}};
+use crate::{cpu::{debug::CPUStateDump, CPU, FIRST_COMMAND, REG_COUNT}, mem::Memory, tty::TRANSMITTER_BUFFER_ADDRESS, utils::{make_word, Byte, Word}};
 
 
 pub fn test_cpu(cpu: &mut CPU) {
@@ -80,4 +80,21 @@ fn mov_const(reg: Byte) -> Word {
 
 fn make_two_cmd(opcode: Word, src: Byte, dst: Byte) -> Word {
     opcode | ((src as Word) << 6) | dst as Word
+}
+
+fn make_infinite_loop_print_m() -> Arc<Mutex<Memory>> {
+    let mem = Memory::new();
+
+    let mem_binding = mem.clone();
+    let mut memory = mem_binding.lock().unwrap();
+
+    let mut address = FIRST_COMMAND;
+
+    address = memory.write_word(address, 0x15DF);
+    address = memory.write_word(address, make_word(b'm', 0x00u8));
+    address = memory.write_word(address, TRANSMITTER_BUFFER_ADDRESS as Word);
+    address = memory.write_word(address, 0x005F);
+    address = memory.write_word(address, FIRST_COMMAND as Word);
+
+    mem
 }

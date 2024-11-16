@@ -15,7 +15,7 @@ impl CPU {
         CPUStateDump {
             status: self.status.lock().unwrap().read_word(),
             registers: self.registers.clone(),
-            running: self.running,
+            running: *self.running.lock().unwrap(),
             waiting: self.waiting,
         }
     }

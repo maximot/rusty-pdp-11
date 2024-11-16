@@ -1,4 +1,4 @@
-use std::{rc::Rc, sync::{Arc, Mutex}};
+use std::sync::{Arc, Mutex};
 
 use addressing::{adressing_from_operand, register_from_operand, AddressingMode};
 use commands::*;
@@ -36,46 +36,50 @@ pub const PRIORITY_HIGH_BIT_INDEX: Byte = 7;
 pub struct CPU {
     status: Arc<Mutex<SimpleMappedMemoryWord>>, // Or PSW (Processor Status Word)
     registers: [Word; REG_COUNT],
-    commands: Rc<Commands>,
-    running: bool,
+    commands: Arc<Commands>,
+    running: Arc<Mutex<bool>>,
     waiting: bool,
-    interruption_bus: InterruptionBus,
+    interruption_bus: Arc<Mutex<InterruptionBus>>,
 }
 
 // Constructors
 impl CPU {
-    pub fn new(commands: Rc<Commands>) -> Self {
+    pub fn new(commands: Arc<Commands>) -> Self {
         CPU {
             status: Arc::new(Mutex::new(SimpleMappedMemoryWord::new())),
             registers: [0; REG_COUNT],
-            commands,
-            running: false,
+            commands: commands,
+            running: Arc::new(Mutex::new(false)),
             waiting: false,
-            interruption_bus: InterruptionBus::new(),
+            interruption_bus: Arc::new(Mutex::new(InterruptionBus::new())),
         }
     }
 }
 
 impl Default for CPU {
     fn default() -> Self {
-        Self::new(Rc::new(Commands::default()))
+        Self::new(Arc::new(Commands::default()))
     }
 }
 
 // Execution
 impl CPU {
-    pub fn interrupt(&mut self, vector_address: Word, priority: Byte) {
-        self.interruption_bus.interrupt(vector_address.into(), priority);
+    pub fn running_flag(&self) -> Arc<Mutex<bool>> {
+        self.running.clone()
+    }
+
+    pub fn interruption_bus(&self) -> Arc<Mutex<InterruptionBus>> {
+        self.interruption_bus.clone()
     }
 
     pub fn run(&mut self, mem: Arc<Mutex<Memory>>) {
         self.map_status_word(mem.clone());
 
-        self.running = true;
+        *self.running.lock().unwrap() = true;
         self.set_word_reg(PROGRAM_COUNTER_INDEX, FIRST_COMMAND as Word);
         self.set_word_reg(STACK_POINTER_INDEX, STACK_START as Word);
 
-        while self.running {
+        while *self.running.lock().unwrap() {
             trace!("tick");
 
             if !self.waiting {
@@ -129,7 +133,7 @@ impl CPU {
     }
 
     fn get_interruption_address_if_any(&mut self) -> Option<Address> {
-        self.interruption_bus.next_interruption_if_any(self.current_priority())
+        self.interruption_bus.lock().unwrap().next_interruption_if_any(self.current_priority())
     }
 
     fn map_status_word(&mut self, mem: Arc<Mutex<Memory>>) {
