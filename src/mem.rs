@@ -8,6 +8,28 @@ pub trait MappedMemoryWord {
     fn read_word(&self) -> Word;
 
     fn write_word(&mut self, word: Word);
+
+    fn read_byte(&self, high: bool) -> Byte {
+        let word = self.read_word();
+        
+        if high {
+            word.high()
+        } else {
+            word.low()
+        }
+    }
+
+    fn write_byte(&mut self, byte: Byte, high: bool) {
+        let current_word = self.read_word();
+
+        let new_word = if high {
+            make_word(current_word.low(), byte)
+        } else {
+            make_word(byte, current_word.high())
+        };
+
+        self.write_word(new_word);
+    }
 }
 
 pub struct SimpleMappedMemoryWord {
@@ -50,13 +72,7 @@ impl Memory {
 
         let mapped_address = address & 0xFFFE;
         if let Some(mapped) = self.get_mapped(address) {
-            let word = mapped.lock().unwrap().read_word();
-
-            if address == mapped_address {
-                return word.low();
-            } else {
-                return word.high();
-            }
+            return mapped.lock().unwrap().read_byte(address != mapped_address);
         }
         
         return self.bytes[address];
@@ -69,17 +85,7 @@ impl Memory {
 
         let mapped_address = address & 0xFFFE;
         if let Some(mapped) = self.get_mapped_mut(address) {
-            let mut mapped_locked = mapped.lock().unwrap();
-            
-            let mapped_value = mapped_locked.read_word();
-
-            let result = if address == mapped_address {
-                make_word(data, mapped_value.high())
-            } else {
-                make_word(mapped_value.low(), data)
-            };
-
-            mapped_locked.write_word(result)
+            mapped.lock().unwrap().write_byte(data, address != mapped_address);
         }
 
         Self::next_byte_address(address)

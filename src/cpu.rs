@@ -2,11 +2,13 @@ use std::{rc::Rc, sync::{Arc, Mutex}};
 
 use addressing::{adressing_from_operand, register_from_operand, AddressingMode};
 use commands::*;
+use interruptions::InterruptionBus;
 
 use crate::{mem::{MappedMemoryWord, Memory, SimpleMappedMemoryWord}, utils::*};
 
 pub mod addressing;
 pub mod interpreter;
+pub mod interruptions;
 pub mod debug;
 pub mod commands;
 
@@ -31,36 +33,13 @@ pub const PRIORITY_LOW_BIT_INDEX: Byte = 5;
 pub const PRIORITY_MIDDLE_BIT_INDEX: Byte = 6;
 pub const PRIORITY_HIGH_BIT_INDEX: Byte = 7;
 
-#[derive(Debug,Clone,Copy)]
-pub struct CpuInterruptionStatus {
-    pub int_address: Word,
-    pub interrupted: bool,
-    pub priority: Byte,
-}
-
-impl CpuInterruptionStatus {
-    pub fn new(interrupted: bool, int_address: Word, priority: Byte) -> Self {
-        CpuInterruptionStatus {
-            int_address,
-            interrupted,
-            priority,
-        }
-    }
-}
-
-impl Default for CpuInterruptionStatus {
-    fn default() -> Self {
-        Self::new(false, 0x0000u16, 0x00u8)
-    }
-}
-
 pub struct CPU {
     status: Arc<Mutex<SimpleMappedMemoryWord>>, // Or PSW (Processor Status Word)
     registers: [Word; REG_COUNT],
     commands: Rc<Commands>,
     running: bool,
     waiting: bool,
-    interruption: Arc<Mutex<CpuInterruptionStatus>>
+    interruption_bus: InterruptionBus,
 }
 
 // Constructors
@@ -72,7 +51,7 @@ impl CPU {
             commands,
             running: false,
             waiting: false,
-            interruption: Arc::new(Mutex::new(CpuInterruptionStatus::default())),
+            interruption_bus: InterruptionBus::new(),
         }
     }
 }
@@ -85,14 +64,8 @@ impl Default for CPU {
 
 // Execution
 impl CPU {
-    pub fn interrupt(&mut self, address: Word, priority: Byte) {
-        assert!(priority <= 0x07);
-
-        let mut interruption_status = self.interruption.lock().unwrap();
-
-        interruption_status.priority = priority;
-        interruption_status.int_address = address;
-        interruption_status.interrupted = true;
+    pub fn interrupt(&mut self, vector_address: Word, priority: Byte) {
+        self.interruption_bus.interrupt(vector_address.into(), priority);
     }
 
     pub fn run(&mut self, mem: Arc<Mutex<Memory>>) {
@@ -146,7 +119,7 @@ impl CPU {
     }
 
     fn process_interruption_if_needed(&mut self, mem: Arc<Mutex<Memory>>) {
-        if let Some(interruption_address) = self.get_interruption_address_if_needed() {
+        if let Some(interruption_address) = self.get_interruption_address_if_any() {
             trace!("processing an interrupt from address 0x{interruption_address:04X}");
 
             self.waiting = false;
@@ -155,19 +128,8 @@ impl CPU {
         }
     }
 
-    fn get_interruption_address_if_needed(&mut self) -> Option<Address> {
-        let mut interruption_status = self.interruption.lock().unwrap();
-
-        if !interruption_status.interrupted || interruption_status.priority <= self.current_priority() {
-            return None;
-        }
-
-        let actual = interruption_status.clone();
-        interruption_status.interrupted = false;
-        interruption_status.int_address = 0;
-        interruption_status.priority = 0;
-
-        Some(actual.int_address.into())
+    fn get_interruption_address_if_any(&mut self) -> Option<Address> {
+        self.interruption_bus.next_interruption_if_any(self.current_priority())
     }
 
     fn map_status_word(&mut self, mem: Arc<Mutex<Memory>>) {
