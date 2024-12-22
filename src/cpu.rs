@@ -230,6 +230,27 @@ impl CPU {
     }
 }
 
+// Float registers
+impl CPU {
+    fn get_float_from_reg(&mut self, memory: &Memory, reg_index: Byte) -> f32 {
+        let address = self.get_word_from_reg(reg_index);
+
+        let hi_word = memory.read_word((address + 2).into());
+        let lo_word = memory.read_word(address.into());
+
+        f32::from_bits(long_word(lo_word, hi_word))
+    }
+
+    fn set_float_by_reg(&mut self, memory: &mut Memory, reg_index: Byte, value: f32) {
+        let address = self.get_word_from_reg(reg_index);
+
+        let long_word_value = value.to_bits();
+
+        memory.write_word((address + 2).into(), long_word_value.high());
+        memory.write_word(address.into(), long_word_value.low());
+    }
+}
+
 // Stack 
 impl CPU {
     fn push_stack(&mut self, memory: &mut Memory, word: Word) {

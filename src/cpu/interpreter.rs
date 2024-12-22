@@ -1,4 +1,4 @@
-use crate::{ mem::Memory, utils::{has_carry, LongWord, Number, Word }};
+use crate::{ mem::{self, Memory}, utils::{has_carry, LongWord, Number, Word }};
 
 use super::{ adr_operand, assert_even_reg, branch_offset, commands::{ dst_operand, src_operand }, has_signed_overflow, long_word, low_reg_operand, make_word, reg_operand, word_has_carry, Address, Byte, CARRY_FLAG_INDEX, CPU, MARK_POINTER_INDEX, NEGATIVE_FLAG_INDEX, OVERFLOW_FLAG_INDEX, PROGRAM_COUNTER_INDEX, STACK_POINTER_INDEX, ZERO_FLAG_INDEX };
 
@@ -41,7 +41,7 @@ impl CPU {
     }
 }
 
-// Set priority & some Control Flow
+// Set priority & some Control Flow & Float commands
 impl CPU {
     pub fn do_spl(&mut self, _memory: &mut Memory, command: Word) {
         self.update_priority(command.low());
@@ -57,6 +57,62 @@ impl CPU {
         let stack_value = self.pop_stack(memory);
 
         self.set_word_reg(reg, stack_value);
+    }
+
+    pub fn do_fadd(&mut self, memory: &mut Memory, command: Word) {
+        let reg = low_reg_operand(command);
+
+        let src_float = self.get_float_from_reg(memory, reg);
+
+        self.increment_reg(reg, 2 * Word::size_bytes().word());
+
+        let dst_float = self.get_float_from_reg(memory, reg);
+
+        let result = src_float + dst_float;
+
+        self.set_float_by_reg(memory, reg, result);
+    }
+
+    pub fn do_fsub(&mut self, memory: &mut Memory, command: Word) {
+        let reg = low_reg_operand(command);
+
+        let src_float = self.get_float_from_reg(memory, reg);
+
+        self.increment_reg(reg, 2 * Word::size_bytes().word());
+
+        let dst_float = self.get_float_from_reg(memory, reg);
+
+        let result = dst_float - src_float;
+
+        self.set_float_by_reg(memory, reg, result);
+    }
+
+    pub fn do_fmul(&mut self, memory: &mut Memory, command: Word) {
+        let reg = low_reg_operand(command);
+
+        let src_float = self.get_float_from_reg(memory, reg);
+
+        self.increment_reg(reg, 2 * Word::size_bytes().word());
+
+        let dst_float = self.get_float_from_reg(memory, reg);
+
+        let result = dst_float * src_float;
+
+        self.set_float_by_reg(memory, reg, result);
+    }
+
+    pub fn do_fdiv(&mut self, memory: &mut Memory, command: Word) {
+        let reg = low_reg_operand(command);
+
+        let src_float = self.get_float_from_reg(memory, reg);
+
+        self.increment_reg(reg, 2 * Word::size_bytes().word());
+
+        let dst_float = self.get_float_from_reg(memory, reg);
+
+        let result = dst_float / src_float;
+
+        self.set_float_by_reg(memory, reg, result);
     }
 }
 

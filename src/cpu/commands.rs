@@ -23,7 +23,7 @@ pub const O_0_MASK: Word = 0xFFFF;
 pub const P_MASK: Word = 0xFFF8;
 
 /**
- * Consition codes set/reset mask
+ * Condition codes set/reset mask
  * 1111111111110000
  * FEDCBA9876543210
  */
@@ -130,6 +130,10 @@ impl Default for Commands {
             p_commands: HashMap::from([
                 command(0x0098, "SPL", CPU::do_spl),
                 command(0x0080, "RTS", CPU::do_rts),
+                command(0x7A00, "FADD", CPU::do_fadd),
+                command(0x7A08, "FSUB", CPU::do_fsub),
+                command(0x7A10, "FMUL", CPU::do_fmul),
+                command(0x7A18, "FDIV", CPU::do_fdiv),
             ]),
             c_commands: HashMap::from([
                 command(0x00B0, "SE*", CPU::do_se),
